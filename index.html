@@ -269,6 +269,24 @@
             font-style: italic;
         }
 
+        .loading-message {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            background: #f8f9ff;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .error-message {
+            text-align: center;
+            padding: 40px;
+            color: #e74c3c;
+            background: #fff5f5;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
         @media (max-width: 768px) {
             .main-buttons {
                 flex-direction: column;
@@ -296,8 +314,8 @@
                     <div class="button-arrow">→</div>
                     <div class="bus-options" id="busOptions">
                         <div class="sub-buttons">
-                            <button class="sub-button" id="toSchoolBtn">학교로</button>
-                            <button class="sub-button" id="toStationBtn">역으로</button>
+                            <button class="sub-button" id="toSchoolBtn">밀양역 → 부산대</button>
+                            <button class="sub-button" id="toStationBtn">부산대 → 밀양역</button>
                         </div>
                     </div>
                 </div>
@@ -323,9 +341,9 @@
             </div>
             
             <div class="schedule-tabs">
-                <button class="tab-btn active" data-schedule="weekday">개강(평일)</button>
-                <button class="tab-btn" data-schedule="weekend">주말/공휴일/대학방학</button>
-                <button class="tab-btn" data-schedule="school_break">대학만 방학</button>
+                <button class="tab-btn active" data-schedule="평일">평일</button>
+                <button class="tab-btn" data-schedule="주말">주말/공휴일</button>
+                <button class="tab-btn" data-schedule="방학">방학</button>
             </div>
 
             <div class="timetable" id="timetableContainer">
@@ -335,22 +353,23 @@
     </div>
 
     <script>
-        // 전역 변수 (엑셀에서 로드될 때까지 빈 상태)
+        // 전역 변수
         const busSchedules = {
             toSchool: {
-                weekday: [],
-                weekend: [],
-                school_break: []
+                평일: [],
+                주말: [],
+                방학: []
             },
             toStation: {
-                weekday: [],
-                weekend: [],
-                school_break: []
+                평일: [],
+                주말: [],
+                방학: []
             }
         };
 
         let currentDirection = 'toSchool';
-        let currentSchedule = 'weekday';
+        let currentSchedule = '평일';
+        let isDataLoaded = false;
 
         // DOM 요소들
         const busButton = document.getElementById('busButton');
@@ -406,18 +425,64 @@
             });
         });
 
-        // 엑셀 파일에서 데이터 로드하는 함수 (수정됨)
-        async function loadBusScheduleFromExcel() {
-            try {
-                console.log('🚌 엑셀 파일 로드 시작...');
+        // 시간 포맷 함수
+        function formatTime(timeValue) {
+            if (!timeValue) return '';
+            
+            if (typeof timeValue === 'string') {
+                // "오전 6:01:00" → "6:01" 또는 "오후 1:30:00" → "13:30"
+                let timeStr = timeValue.trim();
                 
-                const response = await fetch('bus_schedule.xlsx');
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: 엑셀 파일을 찾을 수 없습니다`);
+                if (timeStr.includes('오전') || timeStr.includes('오후')) {
+                    const isAM = timeStr.includes('오전');
+                    timeStr = timeStr.replace(/오전\s?|오후\s?/, '');
+                    
+                    const timeParts = timeStr.split(':');
+                    if (timeParts.length >= 2) {
+                        let hours = parseInt(timeParts[0]);
+                        const minutes = timeParts[1].padStart(2, '0');
+                        
+                        // 오후인 경우 12시간 추가 (단, 12시는 제외)
+                        if (!isAM && hours !== 12) {
+                            hours += 12;
+                        } else if (isAM && hours === 12) {
+                            hours = 0;
+                        }
+                        
+                        return `${hours.toString().padStart(2, '0')}:${minutes}`;
+                    }
                 }
                 
-                const arrayBuffer = await response.arrayBuffer();
-                const workbook = XLSX.read(arrayBuffer, {
+                // 이미 HH:MM 형태인 경우
+                return timeStr.substring(0, 5);
+            } else if (timeValue instanceof Date) {
+                const hours = timeValue.getHours().toString().padStart(2, '0');
+                const minutes = timeValue.getMinutes().toString().padStart(2, '0');
+                return `${hours}:${minutes}`;
+            }
+            
+            return timeValue.toString();
+        }
+
+        // 엑셀 파일에서 데이터 로드하는 함수
+        async function loadBusScheduleFromExcel() {
+            try {
+                console.log('🔄 엑셀 파일 로드 시작...');
+                
+                // SheetJS 라이브러리가 로드되지 않았다면 로드
+                if (!window.XLSX) {
+                    await loadSheetJS();
+                }
+                
+                // 엑셀 파일 읽기
+                const response = await window.fs.readFile('bus_schedule.xlsx');
+                console.log('📂 파일 크기:', response.length, 'bytes');
+                
+                if (response.length === 0) {
+                    throw new Error('엑셀 파일이 비어있습니다.');
+                }
+                
+                const workbook = XLSX.read(response, {
                     cellDates: true,
                     cellNF: true,
                     cellStyles: true
@@ -426,196 +491,94 @@
                 const worksheet = workbook.Sheets['Sheet1'];
                 const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
                 
-                console.log('📊 엑셀 데이터 로드 완료, 총 행 수:', jsonData.length);
-                console.log('📋 헤더:', jsonData[0]);
+                console.log('📊 총 행 수:', jsonData.length);
                 
+                // 데이터 초기화
                 const schedules = {
-                    toSchool: { weekday: [], weekend: [], school_break: [] },
-                    toStation: { weekday: [], weekend: [], school_break: [] }
+                    toSchool: { 평일: [], 주말: [], 방학: [] },
+                    toStation: { 평일: [], 주말: [], 방학: [] }
                 };
                 
-                // 시간 포맷 변환 함수 (개선됨)
-                function formatTime(timeValue) {
-                    if (!timeValue || timeValue === '') return '';
-                    
-                    if (typeof timeValue === 'string') {
-                        // "오전 6:01:00" 또는 "오후 2:30:00" 형태를 "6:01" 또는 "14:30"으로 변환
-                        let time = timeValue.replace(/오전\s?|오후\s?/, '').trim();
-                        
-                        // "오후"인 경우 12시간 더하기 (단, 12시는 그대로)
-                        if (timeValue.includes('오후')) {
-                            const [hours, minutes] = time.split(':');
-                            let hour = parseInt(hours);
-                            if (hour !== 12) {
-                                hour += 12;
-                            }
-                            time = `${hour}:${minutes}`;
-                        } else if (timeValue.includes('오전') && time.startsWith('12:')) {
-                            // 오전 12시는 00시로 변환
-                            time = time.replace('12:', '0:');
-                        }
-                        
-                        // 초 제거하고 시:분만 반환
-                        return time.substring(0, 5);
-                    } 
-                    else if (timeValue instanceof Date) {
-                        const hours = timeValue.getHours().toString().padStart(2, '0');
-                        const minutes = timeValue.getMinutes().toString().padStart(2, '0');
-                        return `${hours}:${minutes}`;
-                    }
-                    
-                    return timeValue.toString();
-                }
-                
-                // 일정 타입 매핑
-                function getScheduleType(dayType) {
-                    if (!dayType) return 'weekday';
-                    
-                    const type = dayType.toString().trim();
-                    if (type === '평일') return 'weekday';
-                    if (type === '주말' || type === '공휴일' || type === '방학') return 'weekend';
-                    if (type === '대학방학' || type === '대학만방학') return 'school_break';
-                    
-                    return 'weekday'; // 기본값
-                }
-                
-                // 버스 노선 정리
-                function formatRoute(runNo) {
-                    if (!runNo) return '미정';
-                    return runNo.toString().includes('번') ? runNo.toString() : `${runNo}번`;
-                }
-                
-                console.log('🔄 데이터 파싱 시작...');
-                
-                // 데이터 파싱 (헤더 제외하고 1번 행부터)
+                // 헤더 행을 제외하고 데이터 파싱
                 for (let i = 1; i < jsonData.length; i++) {
                     const row = jsonData[i];
                     if (!row || row.length < 7) continue;
                     
-                    // ===== 왼쪽 데이터: 밀양→부산대 (toSchool) =====
-                    if (row[0] && row[1]) {
-                        const dayType = getScheduleType(row[0]);
-                        const runNo = formatRoute(row[2]);
-                        const startTime = formatTime(row[3]);  // 시간
-                        const tunnelTime = formatTime(row[4]); // 영남루터널
-                        const miryangTime = formatTime(row[5]); // 밀양역
-                        const pusanTime = formatTime(row[6]);   // 부산대
-                        
-                        // 밀양역과 부산대 시간이 모두 있는 경우만 추가
-                        if (miryangTime && pusanTime) {
-                            schedules.toSchool[dayType].push([
-                                runNo,
-                                miryangTime,  // 출발: 밀양역
-                                pusanTime,    // 도착: 부산대
-                                tunnelTime || 'X' // 영남루터널 (없으면 X)
-                            ]);
-                        }
+                    // 왼쪽 데이터 (밀양→부산대) - 컬럼 0~6
+                    const leftDayType = row[0];
+                    const leftDirection = row[1];
+                    const leftRunNo = row[2];
+                    const leftTime1 = row[3]; // 시간
+                    const leftTime2 = row[4]; // 영남루
+                    const leftTime3 = row[5]; // 밀양역
+                    const leftTime4 = row[6]; // 부산대
+                    
+                    if (leftDayType && leftDirection && leftDirection.includes('밀양→부산대') && leftTime3 && leftTime4) {
+                        const dayType = leftDayType;
+                        schedules.toSchool[dayType] = schedules.toSchool[dayType] || [];
+                        schedules.toSchool[dayType].push([
+                            leftRunNo ? `${leftRunNo}번` : '-',
+                            formatTime(leftTime3), // 밀양역 출발
+                            formatTime(leftTime4), // 부산대 도착
+                            leftTime2 ? formatTime(leftTime2) : '-' // 영남루터널
+                        ]);
                     }
                     
-                    // ===== 오른쪽 데이터: 부산대→밀양 (toStation) =====
-                    if (row.length > 8 && row[8] && row[9]) {
-                        const dayType = getScheduleType(row[8]);
-                        const runNo = formatRoute(row[10]);
-                        const startTime = formatTime(row[11]);  // 시간
-                        const pusanTime = formatTime(row[12]);  // 부산대
-                        const miryangTime = formatTime(row[13]); // 밀양역
-                        const tunnelTime = formatTime(row[14]); // 영남루터널
+                    // 오른쪽 데이터 (부산대→밀양) - 컬럼 8~14
+                    if (row.length > 12) {
+                        const rightDayType = row[8];
+                        const rightDirection = row[9];
+                        const rightRunNo = row[10];
+                        const rightTime1 = row[11]; // 시간
+                        const rightTime2 = row[12]; // 부산대
+                        const rightTime3 = row[13]; // 밀양역
+                        const rightTime4 = row[14]; // 영남루
                         
-                        // 부산대와 밀양역 시간이 모두 있는 경우만 추가
-                        if (pusanTime && miryangTime) {
+                        if (rightDayType && rightDirection && rightDirection.includes('부산대') && rightDirection.includes('밀양') && rightTime2 && rightTime3) {
+                            const dayType = rightDayType;
+                            schedules.toStation[dayType] = schedules.toStation[dayType] || [];
                             schedules.toStation[dayType].push([
-                                runNo,
-                                pusanTime,    // 출발: 부산대
-                                miryangTime,  // 도착: 밀양역
-                                tunnelTime || 'X' // 영남루터널 (없으면 X)
+                                rightRunNo ? `${rightRunNo}번` : '-',
+                                formatTime(rightTime2), // 부산대 출발
+                                formatTime(rightTime3), // 밀양역 도착
+                                rightTime4 ? formatTime(rightTime4) : '-' // 영남루터널
                             ]);
                         }
                     }
                 }
                 
-                // 데이터 정렬 (시간순)
-                Object.keys(schedules).forEach(direction => {
-                    Object.keys(schedules[direction]).forEach(schedule => {
-                        schedules[direction][schedule].sort((a, b) => {
-                            const timeA = direction === 'toSchool' ? a[1] : a[1]; // 출발시간으로 정렬
-                            const timeB = direction === 'toSchool' ? b[1] : b[1];
-                            return timeA.localeCompare(timeB);
-                        });
-                    });
+                // 시간순으로 정렬
+                Object.keys(schedules.toSchool).forEach(dayType => {
+                    schedules.toSchool[dayType].sort((a, b) => a[1].localeCompare(b[1]));
+                });
+                Object.keys(schedules.toStation).forEach(dayType => {
+                    schedules.toStation[dayType].sort((a, b) => a[1].localeCompare(b[1]));
                 });
                 
-                // 기존 데이터를 엑셀 데이터로 완전히 교체
+                // 기존 데이터를 새 데이터로 교체
                 busSchedules.toSchool = schedules.toSchool;
                 busSchedules.toStation = schedules.toStation;
                 
-                console.log('✅ 엑셀 데이터 파싱 완료!');
-                console.log('📈 학교로(toSchool) 데이터:', {
-                    평일: schedules.toSchool.weekday.length,
-                    주말: schedules.toSchool.weekend.length,
-                    대학방학: schedules.toSchool.school_break.length
-                });
-                console.log('📉 역으로(toStation) 데이터:', {
-                    평일: schedules.toStation.weekday.length,
-                    주말: schedules.toStation.weekend.length,
-                    대학방학: schedules.toStation.school_break.length
-                });
+                isDataLoaded = true;
+                
+                console.log('✅ 엑셀 데이터 로드 완료!');
+                console.log('📈 밀양→부산대 평일:', schedules.toSchool.평일.length, '건');
+                console.log('📈 부산대→밀양 평일:', schedules.toStation.평일.length, '건');
                 
                 // 현재 시간표가 열려있다면 다시 렌더링
-                if (document.getElementById('timetableView').style.display === 'block') {
+                if (timetableView.style.display === 'block') {
                     renderTimetable();
                 }
                 
-                // 성공 알림 표시
-                showSuccessMessage();
-                
             } catch (error) {
                 console.error('❌ 엑셀 파일 로드 실패:', error);
-                showErrorMessage(error.message);
-            }
-        }
-        
-        // 성공 메시지 표시
-        function showSuccessMessage() {
-            const existingMessage = document.querySelector('.status-message');
-            if (existingMessage) existingMessage.remove();
-            
-            const successMessage = document.createElement('div');
-            successMessage.className = 'status-message';
-            successMessage.innerHTML = `
-                <div style="background: #d4edda; color: #155724; padding: 15px; margin: 20px; border-radius: 10px; text-align: center; border: 1px solid #c3e6cb;">
-                    ✅ <strong>엑셀 파일 로드 성공!</strong> 최신 시간표가 적용되었습니다.
-                </div>
-            `;
-            document.querySelector('.container').appendChild(successMessage);
-            
-            // 3초 후 메시지 제거
-            setTimeout(() => {
-                if (successMessage.parentNode) {
-                    successMessage.remove();
+                isDataLoaded = false;
+                
+                // 에러 상황에서도 기본 UI는 동작하도록 함
+                if (timetableView.style.display === 'block') {
+                    renderTimetable();
                 }
-            }, 3000);
-        }
-        
-        // 에러 메시지 표시
-        function showErrorMessage(errorMsg) {
-            const existingMessage = document.querySelector('.status-message');
-            if (existingMessage) existingMessage.remove();
-            
-            const errorMessage = document.createElement('div');
-            errorMessage.className = 'status-message';
-            errorMessage.innerHTML = `
-                <div style="background: #f8d7da; color: #721c24; padding: 20px; margin: 20px; border-radius: 10px; text-align: center; border: 1px solid #f5c6cb;">
-                    <h3>⚠️ 엑셀 파일을 찾을 수 없습니다</h3>
-                    <p><strong>bus_schedule.xlsx</strong> 파일이 웹사이트와 같은 폴더에 있는지 확인해주세요.</p>
-                    <p style="font-size: 0.9em; margin-top: 10px;">오류: ${errorMsg}</p>
-                    <br>
-                    <p style="font-size: 0.9em; color: #666;">
-                        Netlify 배포 시: HTML 파일과 엑셀 파일을 함께 업로드해주세요.
-                    </p>
-                </div>
-            `;
-            document.querySelector('.container').appendChild(errorMessage);
-        }
+            }
         }
 
         // SheetJS 라이브러리 동적 로드
@@ -629,38 +592,33 @@
                 const script = document.createElement('script');
                 script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
                 script.onload = () => {
-                    window.XLSX = XLSX;
+                    console.log('✅ SheetJS 라이브러리 로드 완료');
                     resolve();
                 };
-                script.onerror = reject;
+                script.onerror = (error) => {
+                    console.error('❌ SheetJS 라이브러리 로드 실패:', error);
+                    reject(error);
+                };
                 document.head.appendChild(script);
             });
         }
 
-        // 페이지 로드 시 엑셀 데이터 로드
+        // 페이지 로드 시 초기화
         document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🚀 페이지 로드 완료, 초기화 시작...');
             try {
-                await loadSheetJS();
                 await loadBusScheduleFromExcel();
             } catch (error) {
                 console.error('초기화 실패:', error);
             }
         });
 
-        // 외부 클릭시 옵션 닫기
-        document.addEventListener('click', function(event) {
-            if (!busButton.contains(event.target)) {
-                busOptions.classList.remove('show');
-            }
-            if (!foodButton.contains(event.target)) {
-                foodOptions.classList.remove('show');
-            }
-        });
-
         // 함수들
         function showBusSchedule(direction) {
             currentDirection = direction;
-            const title = direction === 'toSchool' ? '밀양역 → 부산대 시간표' : '부산대 → 밀양역 시간표';
+            const title = direction === 'toSchool' ? 
+                '밀양역 → 부산대 밀양캠퍼스' : 
+                '부산대 밀양캠퍼스 → 밀양역';
             
             timetableTitle.textContent = title;
             mainView.style.display = 'none';
@@ -669,7 +627,7 @@
             // 탭 초기화
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelector('.tab-btn').classList.add('active');
-            currentSchedule = 'weekday';
+            currentSchedule = '평일';
             
             renderTimetable();
         }
@@ -694,11 +652,9 @@
         }
 
         function renderTimetable() {
-            const scheduleData = busSchedules[currentDirection][currentSchedule];
-            
-            if (!scheduleData || scheduleData.length === 0) {
+            if (!isDataLoaded) {
                 timetableContainer.innerHTML = `
-                    <div class="no-service" style="text-align: center; padding: 40px; color: #666;">
+                    <div class="loading-message">
                         <h3>⏳ 시간표 로딩 중...</h3>
                         <p>엑셀 파일에서 데이터를 불러오고 있습니다.</p>
                         <p>잠시만 기다려주세요.</p>
@@ -707,33 +663,53 @@
                 return;
             }
             
+            const scheduleData = busSchedules[currentDirection][currentSchedule];
+            
+            if (!scheduleData || scheduleData.length === 0) {
+                timetableContainer.innerHTML = `
+                    <div class="error-message">
+                        <h3>📅 운행 정보 없음</h3>
+                        <p><strong>${currentSchedule}</strong>에는 운행하지 않습니다.</p>
+                        <p>다른 요일을 선택해보세요.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const isToSchool = currentDirection === 'toSchool';
+            const headers = isToSchool ? 
+                ['버스 노선', '밀양역 출발', '부산대 도착', '영남루터널'] :
+                ['버스 노선', '부산대 출발', '밀양역 도착', '영남루터널'];
+            
             let tableHTML = `
                 <table>
                     <thead>
                         <tr>
-                            <th>버스 노선</th>
-                            <th>부산대</th>
-                            <th>밀양역</th>
-                            <th>영남루터널 통과</th>
+                            ${headers.map(header => `<th>${header}</th>`).join('')}
                         </tr>
                     </thead>
                     <tbody>
             `;
             
             scheduleData.forEach(row => {
-                const [route, pusan, miryang, tunnel] = row;
+                const [route, time1, time2, tunnel] = row;
+                const tunnelDisplay = (tunnel === '-' || !tunnel) ? '통과안함' : tunnel;
+                const tunnelClass = (tunnel === '-' || !tunnel) ? 'no-service' : '';
+                
                 tableHTML += `
                     <tr>
                         <td class="bus-route">${route}</td>
-                        <td class="time">${pusan}</td>
-                        <td class="time">${miryang}</td>
-                        <td class="time ${tunnel === 'X' ? 'no-service' : ''}">${tunnel === 'X' ? '통과안함' : tunnel}</td>
+                        <td class="time">${time1}</td>
+                        <td class="time">${time2}</td>
+                        <td class="time ${tunnelClass}">${tunnelDisplay}</td>
                     </tr>
                 `;
             });
             
             tableHTML += '</tbody></table>';
             timetableContainer.innerHTML = tableHTML;
+            
+            console.log(`📊 ${currentDirection} ${currentSchedule} 시간표 렌더링 완료: ${scheduleData.length}개 항목`);
         }
     </script>
 </body>

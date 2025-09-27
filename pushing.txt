@@ -1,0 +1,16 @@
+cd "C:\Users\sjisu\Desktop\Workspace\my-site"
+
+# 현재 상태 확인
+git status
+
+# 변경분 스테이징
+git add .
+
+# 커밋
+git commit -m "작업 내용 요약"
+
+# 원격 최신 반영 후 내 커밋을 얹기(rebase)
+git pull --rebase origin main
+
+# 푸시 (GitHub로 올라감 → Netlify가 자동 배포 시작)
+git push -u origin main
