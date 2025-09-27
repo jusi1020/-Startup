@@ -1,0 +1,694 @@
+// 외부 클릭시 옵션 닫기
+        document.addEventListener('click', function(event) {
+            if (!busButton.contains(event.target)) {
+                busOptions.classList.remove('show');
+            }
+            if (!foodButton.contains(event.target)) {
+                foodOptions.classList.remove('show');
+            }
+        });<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>부산대 Miryang Campus</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .main-view {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .main-buttons {
+            display: flex;
+            gap: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .main-button {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 30px;
+            padding: 60px 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: visible;
+            border: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .bus-button {
+            background: linear-gradient(135deg, #a8e6cf, #7fcdcd);
+        }
+
+        .food-button {
+            background: linear-gradient(135deg, #b8d4f0, #9bb5d6);
+        }
+
+        .main-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .button-icon {
+            font-size: 4rem;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        .button-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .button-arrow {
+            position: absolute;
+            bottom: 30px;
+            right: 40px;
+            font-size: 2.5rem;
+            color: #333;
+        }
+
+        .sub-buttons {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .sub-button {
+            background: rgba(255, 255, 255, 0.8);
+            border: none;
+            border-radius: 25px;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .sub-button:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+        }
+
+        .bus-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 0 0 30px 30px;
+            padding: 30px;
+            transform: translateY(-10px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .bus-options.show {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .food-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 0 0 30px 30px;
+            padding: 30px;
+            transform: translateY(-10px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .food-options.show {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .timetable-view {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .timetable-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .back-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .timetable-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .schedule-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .tab-btn {
+            background: #f5f5f5;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 15px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            min-width: fit-content;
+        }
+
+        .tab-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .timetable {
+            overflow-x: auto;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .timetable table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            min-width: 500px;
+        }
+
+        .timetable th {
+            background: #667eea;
+            color: white;
+            padding: 12px 8px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .timetable td {
+            padding: 10px 8px;
+            text-align: center;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.9rem;
+            vertical-align: middle;
+        }
+
+        .timetable tr:hover {
+            background: #f8f9ff;
+        }
+
+        .bus-route {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .time {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+
+        .no-service {
+            color: #999;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .main-buttons {
+                flex-direction: column;
+                gap: 30px;
+            }
+            
+            .button-title {
+                font-size: 2rem;
+            }
+            
+            .sub-buttons {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-view" id="mainView">
+            <div class="main-buttons">
+                <div class="main-button bus-button" id="busButton">
+                    <div class="button-icon">🚌</div>
+                    <div class="button-title">Bus</div>
+                    <div class="button-arrow">→</div>
+                    <div class="bus-options" id="busOptions">
+                        <div class="sub-buttons">
+                            <button class="sub-button" id="toSchoolBtn">학교로</button>
+                            <button class="sub-button" id="toStationBtn">역으로</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="main-button food-button" id="foodButton">
+                    <div class="button-icon">🍽️</div>
+                    <div class="button-title">식단 정보</div>
+                    <div class="food-options" id="foodOptions">
+                        <div class="sub-buttons">
+                            <button class="sub-button" id="studentMenuBtn">학식</button>
+                            <button class="sub-button" id="dormMenuBtn">기숙사</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="timetable-view" id="timetableView">
+            <div class="timetable-header">
+                <button class="back-btn" id="backBtn">← 돌아가기</button>
+                <h2 class="timetable-title" id="timetableTitle">버스 시간표</h2>
+                <div></div>
+            </div>
+            
+            <div class="schedule-tabs">
+                <button class="tab-btn active" data-schedule="weekday">개강(평일)</button>
+                <button class="tab-btn" data-schedule="weekend">주말/공휴일/대학방학</button>
+                <button class="tab-btn" data-schedule="school_break">대학만 방학</button>
+            </div>
+
+            <div class="timetable" id="timetableContainer">
+                <!-- 시간표가 여기에 동적으로 생성됩니다 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 전역 변수
+        const busSchedules = {
+            toSchool: {
+                weekday: [
+                    ['7번', '7:02', '7:18', '7:25'],
+                    ['2번', '7:20', '7:32', '7:39'],
+                    ['2번', '7:37', '7:56', '8:03'],
+                    ['2번', '8:40', '8:52', '8:59'],
+                    ['1번', '8:53', '9:12', '9:19'],
+                    ['7번', '9:04', '9:20', '9:27'],
+                    ['아리랑', '9:20', '9:26', 'X'],
+                    ['1번', '9:43', '10:00', '10:07'],
+                    ['2번', '9:56', '10:12', '10:19'],
+                    ['4-1번', '10:13', '10:30', 'X'],
+                    ['2번', '10:38', '10:52', '10:59'],
+                    ['아리랑', '11:10', '11:16', 'X'],
+                    ['7-1번', '11:56', '12:16', '12:23'],
+                    ['1-2번', '12:18', '12:34', '12:41'],
+                    ['2번', '13:02', '13:16', '13:23'],
+                    ['1번', '13:28', '13:44', '13:51'],
+                    ['1번', '13:48', '14:00', '14:07'],
+                    ['7번', '14:29', '14:40', '14:47'],
+                    ['아리랑', '14:30', '14:36', 'X'],
+                    ['4-1번', '15:17', '15:30', 'X'],
+                    ['2번', '15:28', '15:44', '15:51'],
+                    ['1번', '15:52', '16:00', '16:07'],
+                    ['4-1번', '16:17', '16:25', 'X'],
+                    ['2번', '17:02', '17:16', '17:23'],
+                    ['2번', '17:40', '17:56', '18:03'],
+                    ['7번', '17:56', '18:08', '18:15'],
+                    ['7-1번', '18:22', '18:32', '18:39'],
+                    ['아리랑', '18:25', '18:31', 'X'],
+                    ['2번', '18:40', '19:00', '19:07'],
+                    ['7-1번', '19:02', '19:24', '19:31'],
+                    ['1번', '19:42', '19:50', '19:57'],
+                    ['2번', '20:04', '20:18', '20:25'],
+                    ['7번', '20:20', '20:30', '20:37'],
+                    ['7번', '20:57', '21:07', '21:14'],
+                    ['4-1번', '21:17', '21:28', 'X'],
+                    ['2번', '22:09', '22:24', '22:31'],
+                    ['2번', '22:42', '23:00', '23:07'],
+                    ['2번', '23:12', '23:20', '23:27']
+                ],
+                weekend: [
+                    ['2번', '7:20', '7:35', '7:42'],
+                    ['1번', '8:40', '9:05', '9:12'],
+                    ['1번', '8:53', '9:10', '9:17'],
+                    ['2번', '10:38', '10:55', '11:02'],
+                    ['1번', '12:18', '12:40', '12:47'],
+                    ['2번', '13:28', '13:45', '13:52'],
+                    ['2번', '15:28', '15:45', '15:52'],
+                    ['1번', '15:44', '16:00', '16:07'],
+                    ['2번', '17:02', '17:15', '17:22'],
+                    ['2번', '17:40', '18:00', '18:07'],
+                    ['1-2번', '18:18', '18:30', '18:37'],
+                    ['2번', '18:40', '19:00', '19:07'],
+                    ['7-1번', '19:02', '19:24', '19:31'],
+                    ['1번', '20:04', '20:18', '20:25'],
+                    ['4-2번', '20:36', '20:54', '21:01'],
+                    ['1번', '21:32', '21:44', '21:51'],
+                    ['1번', '22:38', '22:50', '22:57']
+                ],
+                school_break: [
+                    ['7번', '7:02', '7:18', '7:25'],
+                    ['2번', '7:20', '7:32', '7:39'],
+                    ['2번', '7:37', '7:56', '8:03'],
+                    ['2번', '8:40', '8:52', '8:59'],
+                    ['1번', '8:53', '9:12', '9:19'],
+                    ['1번', '9:43', '10:00', '10:07'],
+                    ['2번', '10:38', '10:52', '10:59'],
+                    ['1-2번', '12:18', '12:34', '12:41'],
+                    ['1번', '13:28', '13:44', '13:51'],
+                    ['1번', '13:48', '14:00', '14:07'],
+                    ['1번', '15:28', '15:44', '15:51'],
+                    ['1번', '15:52', '16:00', '16:07'],
+                    ['2번', '17:02', '17:16', '17:23'],
+                    ['2번', '17:40', '17:56', '18:03'],
+                    ['7-1번', '18:22', '18:32', '18:39'],
+                    ['2번', '18:40', '19:00', '19:07'],
+                    ['7-1번', '19:02', '19:24', '19:31'],
+                    ['2번', '20:04', '20:18', '20:25'],
+                    ['2번', '22:42', '23:00', '23:07']
+                ]
+            },
+            toStation: {
+                weekday: [],
+                weekend: [],
+                school_break: []
+            }
+        };
+
+        let currentDirection = 'toSchool';
+        let currentSchedule = 'weekday';
+
+        // DOM 요소들
+        const busButton = document.getElementById('busButton');
+        const foodButton = document.getElementById('foodButton');
+        const busOptions = document.getElementById('busOptions');
+        const foodOptions = document.getElementById('foodOptions');
+        const toSchoolBtn = document.getElementById('toSchoolBtn');
+        const toStationBtn = document.getElementById('toStationBtn');
+        const studentMenuBtn = document.getElementById('studentMenuBtn');
+        const dormMenuBtn = document.getElementById('dormMenuBtn');
+        const backBtn = document.getElementById('backBtn');
+        const mainView = document.getElementById('mainView');
+        const timetableView = document.getElementById('timetableView');
+        const timetableTitle = document.getElementById('timetableTitle');
+        const timetableContainer = document.getElementById('timetableContainer');
+
+        // 이벤트 리스너
+        busButton.addEventListener('click', function() {
+            foodOptions.classList.remove('show');
+            busOptions.classList.toggle('show');
+        });
+
+        foodButton.addEventListener('click', function() {
+            busOptions.classList.remove('show');
+            foodOptions.classList.toggle('show');
+        });
+
+        toSchoolBtn.addEventListener('click', function() {
+            showBusSchedule('toSchool');
+        });
+
+        toStationBtn.addEventListener('click', function() {
+            showBusSchedule('toStation');
+        });
+
+        backBtn.addEventListener('click', function() {
+            showMainView();
+        });
+
+        studentMenuBtn.addEventListener('click', function() {
+            alert('학식 메뉴 페이지로 이동합니다.');
+        });
+
+        dormMenuBtn.addEventListener('click', function() {
+            alert('기숙사 식당 메뉴 페이지로 이동합니다.');
+        });
+
+        // 탭 버튼 이벤트
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const scheduleType = this.getAttribute('data-schedule');
+                changeSchedule(scheduleType);
+            });
+        });
+
+        // 엑셀 파일에서 데이터 로드하는 함수
+        async function loadBusScheduleFromExcel() {
+            try {
+                const response = await window.fs.readFile('bus_schedule.xlsx');
+                
+                // SheetJS를 사용해서 엑셀 파일 읽기
+                const workbook = XLSX.read(response, {
+                    cellDates: true,
+                    cellNF: true,
+                    cellStyles: true
+                });
+                
+                const worksheet = workbook.Sheets['Sheet1'];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                
+                console.log('엑셀 파일 로드 성공, 총 행 수:', jsonData.length);
+                
+                const schedules = {
+                    toSchool: { weekday: [], weekend: [], school_break: [] },
+                    toStation: { weekday: [], weekend: [], school_break: [] }
+                };
+                
+                // 시간 포맷 변환 함수
+                function formatTime(timeValue) {
+                    if (!timeValue) return '';
+                    
+                    if (typeof timeValue === 'string') {
+                        // "오전 6:01:00" → "6:01"
+                        return timeValue.replace(/오전\s?|오후\s?/, '').substring(0, 5);
+                    } else if (timeValue instanceof Date) {
+                        // Date 객체를 시:분 형태로 변환
+                        return timeValue.toTimeString().substring(0, 5);
+                    }
+                    return timeValue.toString();
+                }
+                
+                // 일정 타입 변환
+                function getScheduleType(dayType) {
+                    if (dayType === '평일') return 'weekday';
+                    if (dayType === '주말' || dayType === '공휴일' || dayType === '방학') return 'weekend';
+                    if (dayType === '대학방학') return 'school_break';
+                    return 'weekday'; // 기본값
+                }
+                
+                // 데이터 파싱
+                for (let i = 1; i < jsonData.length; i++) {
+                    const row = jsonData[i];
+                    if (!row || row.length < 7) continue;
+                    
+                    // 왼쪽 데이터 (밀양→부산대)
+                    if (row[0] && row[1]) {
+                        const dayType = getScheduleType(row[0]);
+                        const runNo = row[2] || '';
+                        const time1 = formatTime(row[3]); // 시간
+                        const time2 = formatTime(row[4]); // 영남루
+                        const time3 = formatTime(row[5]); // 밀양역
+                        const time4 = formatTime(row[6]); // 부산대
+                        
+                        if (time3 && time4) { // 밀양역과 부산대 시간이 있는 경우만
+                            schedules.toSchool[dayType].push([
+                                `${runNo}번`,
+                                time3, // 밀양역 출발
+                                time4, // 부산대 도착
+                                time2 || 'X' // 영남루터널 (없으면 X)
+                            ]);
+                        }
+                    }
+                    
+                    // 오른쪽 데이터 (부산대→밀양) - 8번째 컬럼부터
+                    if (row[8] && row[9] && row.length > 12) {
+                        const dayType = getScheduleType(row[8]);
+                        const runNo = row[10] || '';
+                        const time1 = formatTime(row[11]); // 시간
+                        const time2 = formatTime(row[12]); // 부산대
+                        const time3 = formatTime(row[13]); // 밀양역
+                        const time4 = formatTime(row[14]); // 영남루
+                        
+                        if (time2 && time3) { // 부산대와 밀양역 시간이 있는 경우만
+                            schedules.toStation[dayType].push([
+                                `${runNo}번`,
+                                time2, // 부산대 출발
+                                time3, // 밀양역 도착
+                                time4 || 'X' // 영남루터널 (없으면 X)
+                            ]);
+                        }
+                    }
+                }
+                
+                // 기존 데이터를 엑셀 데이터로 교체
+                Object.assign(busSchedules, schedules);
+                console.log('엑셀 데이터 파싱 완료:', schedules);
+                
+            } catch (error) {
+                console.error('엑셀 파일 로드 실패, 기본 데이터 사용:', error);
+            }
+        }
+
+        // SheetJS 라이브러리 동적 로드
+        function loadSheetJS() {
+            return new Promise((resolve, reject) => {
+                if (window.XLSX) {
+                    resolve();
+                    return;
+                }
+                
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+                script.onload = () => {
+                    window.XLSX = XLSX;
+                    resolve();
+                };
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        // 페이지 로드 시 엑셀 데이터 로드
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                await loadSheetJS();
+                await loadBusScheduleFromExcel();
+            } catch (error) {
+                console.error('초기화 실패:', error);
+            }
+        });
+
+        // 함수들
+        function showBusSchedule(direction) {
+            currentDirection = direction;
+            const title = direction === 'toSchool' ? '밀양역 → 부산대 시간표' : '부산대 → 밀양역 시간표';
+            
+            timetableTitle.textContent = title;
+            mainView.style.display = 'none';
+            timetableView.style.display = 'block';
+            
+            // 탭 초기화
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.tab-btn').classList.add('active');
+            currentSchedule = 'weekday';
+            
+            renderTimetable();
+        }
+
+        function showMainView() {
+            mainView.style.display = 'flex';
+            timetableView.style.display = 'none';
+            
+            // 옵션 메뉴 닫기
+            busOptions.classList.remove('show');
+            foodOptions.classList.remove('show');
+        }
+
+        function changeSchedule(scheduleType) {
+            currentSchedule = scheduleType;
+            
+            // 탭 활성화 상태 변경
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-schedule="${scheduleType}"]`).classList.add('active');
+            
+            renderTimetable();
+        }
+
+        function renderTimetable() {
+            const scheduleData = busSchedules[currentDirection][currentSchedule];
+            
+            if (!scheduleData || scheduleData.length === 0) {
+                timetableContainer.innerHTML = '<div class="no-service">해당 시간표 정보가 준비 중입니다.</div>';
+                return;
+            }
+            
+            let tableHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>버스 노선</th>
+                            <th>부산대</th>
+                            <th>밀양역</th>
+                            <th>영남루터널 통과</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            scheduleData.forEach(row => {
+                const [route, pusan, miryang, tunnel] = row;
+                tableHTML += `
+                    <tr>
+                        <td class="bus-route">${route}</td>
+                        <td class="time">${pusan}</td>
+                        <td class="time">${miryang}</td>
+                        <td class="time ${tunnel === 'X' ? 'no-service' : ''}">${tunnel === 'X' ? '통과안함' : tunnel}</td>
+                    </tr>
+                `;
+            });
+            
+            tableHTML += '</tbody></table>';
+            timetableContainer.innerHTML = tableHTML;
+        }
+    </script>
+</body>
+</html>
