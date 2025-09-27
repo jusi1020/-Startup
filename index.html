@@ -335,89 +335,12 @@
     </div>
 
     <script>
-        // 전역 변수
+        // 전역 변수 (엑셀에서 로드될 때까지 빈 상태)
         const busSchedules = {
             toSchool: {
-                weekday: [
-                    ['7번', '7:02', '7:18', '7:25'],
-                    ['2번', '7:20', '7:32', '7:39'],
-                    ['2번', '7:37', '7:56', '8:03'],
-                    ['2번', '8:40', '8:52', '8:59'],
-                    ['1번', '8:53', '9:12', '9:19'],
-                    ['7번', '9:04', '9:20', '9:27'],
-                    ['아리랑', '9:20', '9:26', 'X'],
-                    ['1번', '9:43', '10:00', '10:07'],
-                    ['2번', '9:56', '10:12', '10:19'],
-                    ['4-1번', '10:13', '10:30', 'X'],
-                    ['2번', '10:38', '10:52', '10:59'],
-                    ['아리랑', '11:10', '11:16', 'X'],
-                    ['7-1번', '11:56', '12:16', '12:23'],
-                    ['1-2번', '12:18', '12:34', '12:41'],
-                    ['2번', '13:02', '13:16', '13:23'],
-                    ['1번', '13:28', '13:44', '13:51'],
-                    ['1번', '13:48', '14:00', '14:07'],
-                    ['7번', '14:29', '14:40', '14:47'],
-                    ['아리랑', '14:30', '14:36', 'X'],
-                    ['4-1번', '15:17', '15:30', 'X'],
-                    ['2번', '15:28', '15:44', '15:51'],
-                    ['1번', '15:52', '16:00', '16:07'],
-                    ['4-1번', '16:17', '16:25', 'X'],
-                    ['2번', '17:02', '17:16', '17:23'],
-                    ['2번', '17:40', '17:56', '18:03'],
-                    ['7번', '17:56', '18:08', '18:15'],
-                    ['7-1번', '18:22', '18:32', '18:39'],
-                    ['아리랑', '18:25', '18:31', 'X'],
-                    ['2번', '18:40', '19:00', '19:07'],
-                    ['7-1번', '19:02', '19:24', '19:31'],
-                    ['1번', '19:42', '19:50', '19:57'],
-                    ['2번', '20:04', '20:18', '20:25'],
-                    ['7번', '20:20', '20:30', '20:37'],
-                    ['7번', '20:57', '21:07', '21:14'],
-                    ['4-1번', '21:17', '21:28', 'X'],
-                    ['2번', '22:09', '22:24', '22:31'],
-                    ['2번', '22:42', '23:00', '23:07'],
-                    ['2번', '23:12', '23:20', '23:27']
-                ],
-                weekend: [
-                    ['2번', '7:20', '7:35', '7:42'],
-                    ['1번', '8:40', '9:05', '9:12'],
-                    ['1번', '8:53', '9:10', '9:17'],
-                    ['2번', '10:38', '10:55', '11:02'],
-                    ['1번', '12:18', '12:40', '12:47'],
-                    ['2번', '13:28', '13:45', '13:52'],
-                    ['2번', '15:28', '15:45', '15:52'],
-                    ['1번', '15:44', '16:00', '16:07'],
-                    ['2번', '17:02', '17:15', '17:22'],
-                    ['2번', '17:40', '18:00', '18:07'],
-                    ['1-2번', '18:18', '18:30', '18:37'],
-                    ['2번', '18:40', '19:00', '19:07'],
-                    ['7-1번', '19:02', '19:24', '19:31'],
-                    ['1번', '20:04', '20:18', '20:25'],
-                    ['4-2번', '20:36', '20:54', '21:01'],
-                    ['1번', '21:32', '21:44', '21:51'],
-                    ['1번', '22:38', '22:50', '22:57']
-                ],
-                school_break: [
-                    ['7번', '7:02', '7:18', '7:25'],
-                    ['2번', '7:20', '7:32', '7:39'],
-                    ['2번', '7:37', '7:56', '8:03'],
-                    ['2번', '8:40', '8:52', '8:59'],
-                    ['1번', '8:53', '9:12', '9:19'],
-                    ['1번', '9:43', '10:00', '10:07'],
-                    ['2번', '10:38', '10:52', '10:59'],
-                    ['1-2번', '12:18', '12:34', '12:41'],
-                    ['1번', '13:28', '13:44', '13:51'],
-                    ['1번', '13:48', '14:00', '14:07'],
-                    ['1번', '15:28', '15:44', '15:51'],
-                    ['1번', '15:52', '16:00', '16:07'],
-                    ['2번', '17:02', '17:16', '17:23'],
-                    ['2번', '17:40', '17:56', '18:03'],
-                    ['7-1번', '18:22', '18:32', '18:39'],
-                    ['2번', '18:40', '19:00', '19:07'],
-                    ['7-1번', '19:02', '19:24', '19:31'],
-                    ['2번', '20:04', '20:18', '20:25'],
-                    ['2번', '22:42', '23:00', '23:07']
-                ]
+                weekday: [],
+                weekend: [],
+                school_break: []
             },
             toStation: {
                 weekday: [],
@@ -486,10 +409,16 @@
         // 엑셀 파일에서 데이터 로드하는 함수
         async function loadBusScheduleFromExcel() {
             try {
-                const response = await window.fs.readFile('bus_schedule.xlsx');
+                // fetch를 사용해서 엑셀 파일을 가져옴
+                const response = await fetch('bus_schedule.xlsx');
+                if (!response.ok) {
+                    throw new Error(`엑셀 파일을 찾을 수 없습니다: ${response.status}`);
+                }
+                
+                const arrayBuffer = await response.arrayBuffer();
                 
                 // SheetJS를 사용해서 엑셀 파일 읽기
-                const workbook = XLSX.read(response, {
+                const workbook = XLSX.read(arrayBuffer, {
                     cellDates: true,
                     cellNF: true,
                     cellStyles: true
@@ -514,7 +443,9 @@
                         return timeValue.replace(/오전\s?|오후\s?/, '').substring(0, 5);
                     } else if (timeValue instanceof Date) {
                         // Date 객체를 시:분 형태로 변환
-                        return timeValue.toTimeString().substring(0, 5);
+                        const hours = timeValue.getHours().toString().padStart(2, '0');
+                        const minutes = timeValue.getMinutes().toString().padStart(2, '0');
+                        return `${hours}:${minutes}`;
                     }
                     return timeValue.toString();
                 }
@@ -571,12 +502,40 @@
                     }
                 }
                 
-                // 기존 데이터를 엑셀 데이터로 교체
-                Object.assign(busSchedules, schedules);
-                console.log('엑셀 데이터 파싱 완료:', schedules);
+                // 기존 데이터를 엑셀 데이터로 완전히 교체
+                busSchedules.toSchool = schedules.toSchool;
+                busSchedules.toStation = schedules.toStation;
+                
+                console.log('✅ 엑셀 파일에서 데이터를 성공적으로 불러왔습니다!');
+                console.log('불러온 데이터:', schedules);
+                
+                // 현재 시간표가 열려있다면 다시 렌더링
+                if (document.getElementById('timetableView').style.display === 'block') {
+                    renderTimetable();
+                }
                 
             } catch (error) {
-                console.error('엑셀 파일 로드 실패, 기본 데이터 사용:', error);
+                console.error('❌ 엑셀 파일 로드 실패:', error);
+                console.log('엑셀 파일이 없거나 읽을 수 없습니다.');
+                
+                // 에러 메시지 표시
+                const errorMessage = `
+                    <div style="text-align: center; padding: 40px; color: #e74c3c; background: #fff5f5; border-radius: 10px; margin: 20px;">
+                        <h3>⚠️ 엑셀 파일을 찾을 수 없습니다</h3>
+                        <p><strong>bus_schedule.xlsx</strong> 파일이 웹사이트와 같은 폴더에 있는지 확인해주세요.</p>
+                        <p>파일 경로: <code>bus_schedule.xlsx</code></p>
+                        <br>
+                        <p style="font-size: 0.9em; color: #666;">
+                            Netlify 배포 시: HTML 파일과 엑셀 파일을 함께 업로드해주세요.
+                        </p>
+                    </div>
+                `;
+                
+                // 메인 화면에 에러 메시지 표시
+                if (document.getElementById('mainView').style.display !== 'none') {
+                    const container = document.querySelector('.container');
+                    container.insertAdjacentHTML('beforeend', errorMessage);
+                }
             }
         }
 
@@ -649,7 +608,13 @@
             const scheduleData = busSchedules[currentDirection][currentSchedule];
             
             if (!scheduleData || scheduleData.length === 0) {
-                timetableContainer.innerHTML = '<div class="no-service">해당 시간표 정보가 준비 중입니다.</div>';
+                timetableContainer.innerHTML = `
+                    <div class="no-service" style="text-align: center; padding: 40px; color: #666;">
+                        <h3>⏳ 시간표 로딩 중...</h3>
+                        <p>엑셀 파일에서 데이터를 불러오고 있습니다.</p>
+                        <p>잠시만 기다려주세요.</p>
+                    </div>
+                `;
                 return;
             }
             
