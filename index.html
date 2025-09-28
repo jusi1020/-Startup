@@ -4,14 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>밀양 ↔ 부산대 버스시간표</title>
+  <meta name="build" content="2025-09-28T15:45+09:00-lazyloader-local-first" />
   <style>
     :root {
       --bg: #0b0b0c;
       --card: #151518;
       --muted: #979aa1;
       --text: #e9e9ee;
-      --accent: #5aa2ff;
-      --accent-2: #7ad1c2;
       --border: #23232a;
     }
     * { box-sizing: border-box; }
@@ -28,16 +27,8 @@
       margin: 40px auto;
       padding: 0 16px;
     }
-    header h1 {
-      font-size: 28px;
-      margin: 0 0 4px 0;
-      letter-spacing: 0.2px;
-    }
-    header p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 14px;
-    }
+    header h1 { font-size: 28px; margin: 0 0 4px 0; letter-spacing: 0.2px; }
+    header p { margin: 0; color: var(--muted); font-size: 14px; }
     .card {
       background: linear-gradient(180deg, #171922, #12131a);
       border: 1px solid var(--border);
@@ -46,94 +37,27 @@
       overflow: hidden;
       margin-top: 20px;
     }
-    .toolbar {
-      display: flex;
-      gap: 10px;
-      padding: 14px;
-      border-bottom: 1px solid var(--border);
-      align-items: center;
-      background: rgba(255,255,255,0.02);
-    }
-    .btn {
-      appearance: none;
-      border: 1px solid var(--border);
-      background: #191a21;
-      color: var(--text);
-      font-weight: 600;
-      padding: 10px 14px;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: transform .06s ease, border-color .2s ease, background .2s ease;
-      white-space: nowrap;
-    }
+    .toolbar { display: flex; gap: 10px; padding: 14px; border-bottom: 1px solid var(--border); align-items: center; background: rgba(255,255,255,0.02); }
+    .btn { appearance: none; border: 1px solid var(--border); background: #191a21; color: var(--text); font-weight: 600; padding: 10px 14px; border-radius: 10px; cursor: pointer; transition: transform .06s ease, border-color .2s ease, background .2s ease; white-space: nowrap; }
     .btn:hover { transform: translateY(-1px); border-color: #2a2a33; }
     .btn:active { transform: translateY(0); }
     .btn.primary { background: linear-gradient(180deg, #27314a, #1f2740); border-color: #2a3a64; }
-    .btn.ghost { background: transparent; }
-    .submenu {
-      display: none;
-      gap: 8px;
-      padding: 12px 14px;
-      border-bottom: 1px dashed var(--border);
-    }
+    .submenu { display: none; gap: 8px; padding: 12px 14px; border-bottom: 1px dashed var(--border); }
     .submenu.open { display: flex; flex-wrap: wrap; }
-    .tabs {
-      display: flex; gap: 6px; padding: 12px 14px; border-bottom: 1px dashed var(--border);
-    }
-    .tab {
-      border: 1px solid var(--border);
-      background: #14151b;
-      color: var(--muted);
-      padding: 6px 10px;
-      border-radius: 999px;
-      cursor: pointer;
-      font-size: 13px;
-    }
+    .tabs { display: flex; gap: 6px; padding: 12px 14px; border-bottom: 1px dashed var(--border); }
+    .tab { border: 1px solid var(--border); background: #14151b; color: #979aa1; padding: 6px 10px; border-radius: 999px; cursor: pointer; font-size: 13px; }
     .tab.active { color: #fff; border-color: #34406a; background: #21263b; }
     .content { padding: 16px; }
-    .title-row {
-      display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px;
-    }
-    .title-row h2 {
-      margin: 0; font-size: 20px; font-weight: 700;
-    }
-    .title-row .meta {
-      font-size: 12px; color: var(--muted);
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      overflow: hidden;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: #0f1118;
-    }
-    thead th {
-      background: #171a24;
-      color: #d6d8de;
-      text-align: left;
-      padding: 10px 12px;
-      font-size: 13px;
-      border-bottom: 1px solid var(--border);
-    }
-    tbody td {
-      border-top: 1px solid var(--border);
-      padding: 9px 12px;
-      font-size: 14px;
-      color: #e8eaf0;
-    }
+    .title-row { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+    .title-row h2 { margin: 0; font-size: 20px; font-weight: 700; }
+    .title-row .meta { font-size: 12px; color: #979aa1; }
+    table { width: 100%; border-collapse: collapse; overflow: hidden; border-radius: 12px; border: 1px solid var(--border); background: #0f1118; }
+    thead th { background: #171a24; color: #d6d8de; text-align: left; padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--border); }
+    tbody td { border-top: 1px solid var(--border); padding: 9px 12px; font-size: 14px; color: #e8eaf0; }
     tbody tr:hover { background: rgba(255,255,255,0.02); }
-    .empty {
-      padding: 24px; text-align: center; color: var(--muted);
-    }
-    footer {
-      margin-top: 28px; color: var(--muted); font-size: 12px;
-    }
-    .chip {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: #14222b; border: 1px solid #203847; color: #9cc7da;
-      padding: 4px 8px; border-radius: 999px; font-size: 12px;
-    }
+    .empty { padding: 24px; text-align: center; color: #979aa1; }
+    footer { margin-top: 28px; color: #979aa1; font-size: 12px; }
+    .chip { display: inline-flex; align-items: center; gap: 6px; background: #14222b; border: 1px solid #203847; color: #9cc7da; padding: 4px 8px; border-radius: 999px; font-size: 12px; }
   </style>
 </head>
 <body>
@@ -165,12 +89,13 @@
       </div>
     </section>
 
-    <footer>※ 데이터는 루트 경로의 <code>bus_schedule.xlsx</code>에서 직접 읽어옵니다. 샘플 데이터는 포함하지 않습니다.</footer>
+    <footer>※ 데이터는 루트 경로의 <code>bus_schedule.xlsx</code>에서 직접 읽어옵니다. 샘플 데이터는 포함하지 않습니다. <b>build: 2025-09-28 local-first</b></footer>
   </div>
 
   <script>
-    // ===== SheetJS (XLSX) lazy loader with CDN fallbacks =====
+    // ===== SheetJS (XLSX) lazy loader with local-first and CDN fallbacks =====
     const SHEETJS_URLS = [
+      "./xlsx.full.min.js?v=0.20.0", // local copy (put this file in repo root)
       "https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js",
       "https://cdn.jsdelivr.net/npm/xlsx@0.20.0/dist/xlsx.full.min.js",
       "https://unpkg.com/xlsx@0.20.0/dist/xlsx.full.min.js"
@@ -182,8 +107,9 @@
       _xlsxPromise = new Promise((resolve, reject) => {
         let i = 0;
         const tryNext = () => {
+          if (window.XLSX) { resolve(window.XLSX); return; }
           if (i >= SHEETJS_URLS.length) {
-            reject(new Error("XLSX CDN을 불러오지 못했습니다."));
+            reject(new Error("XLSX 스크립트를 불러오지 못했습니다."));
             return;
           }
           const url = SHEETJS_URLS[i++];
@@ -192,6 +118,7 @@
           s.async = true;
           s.onload = () => resolve(window.XLSX);
           s.onerror = () => {
+            console.warn("[XLSX loader] failed:", url);
             s.remove();
             tryNext();
           };
@@ -205,10 +132,7 @@
     // ===== Global State =====
     const STATE = {
       workbookLoaded: false,
-      data: {
-        toSchool: [],   // {day_type, run, t: {시간, 영남루, 밀양역, 부산대}}
-        toStation: []   // {day_type, run, t: {시간, 부산대, 밀양역, 영남루}}
-      },
+      data: { toSchool: [], toStation: [] }, // parsed rows
       direction: null,   // 'toSchool' | 'toStation'
       dayType: '평일'
     };
@@ -234,17 +158,11 @@
         const parts = s.split(":").map(p => p.padStart(2,"0"));
         let h = parseInt(parts[0], 10);
         const m = parts[1] || "00";
-        if (ampm === "AM") {
-          if (h === 12) h = 0;
-        } else {
-          if (h !== 12) h = h + 12;
-        }
+        if (ampm === "AM") { if (h === 12) h = 0; } else { if (h !== 12) h = h + 12; }
         return String(h).padStart(2,"0") + ":" + String(m).padStart(2,"0");
       }
       const m2 = s.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
-      if (m2) {
-        return m2[1].padStart(2,"0") + ":" + m2[2];
-      }
+      if (m2) return m2[1].padStart(2,"0") + ":" + m2[2];
       return s;
     }
 
@@ -253,7 +171,7 @@
       if (STATE.workbookLoaded) return;
       showStatus("엑셀 불러오는 중…", true);
       try {
-        await loadXLSX(); // <-- guarantee window.XLSX is defined
+        await loadXLSX(); // guarantee window.XLSX
         const res = await fetch("./bus_schedule.xlsx", { cache: "no-store" });
         if (!res.ok) throw new Error("엑셀 파일을 불러올 수 없습니다 (" + res.status + ")");
         const ab = await res.arrayBuffer();
