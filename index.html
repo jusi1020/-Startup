@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>밀양 ↔ 부산대 버스시간표</title>
-  <meta name="build" content="2025-09-28T16:40+09:00-json-only" />
+  <title>밀양역 ↔ 부산대 버스시간표</title>
+  <meta name="build" content="2025-09-28T17:20+09:00-json-only-no-seconds" />
   <style>
     :root { --bg:#0b0b0c; --border:#23232a; --text:#e9e9ee; --muted:#979aa1; }
     *{box-sizing:border-box} html,body{height:100%}
@@ -13,7 +13,7 @@
     header h1{font-size:28px;margin:0 0 4px} header p{margin:0;color:var(--muted);font-size:14px}
     .card{background:linear-gradient(180deg,#171922,#12131a);border:1px solid var(--border);border-radius:16px;box-shadow:0 10px 24px rgba(0,0,0,.35);overflow:hidden;margin-top:20px}
     .toolbar{display:flex;gap:10px;padding:14px;border-bottom:1px solid var(--border);align-items:center;background:rgba(255,255,255,.02)}
-    .btn{appearance:none;border:1px solid var(--border);background:#191a21;color:var(--text);font-weight:600;padding:10px 14px;border-radius:10px;cursor:pointer;transition:transform .06s,border-color .2s,background .2s;white-space:nowrap}
+    .btn{appearance:none;border:1px solid var(--border);background:#191a21;color:#e9e9ee;font-weight:600;padding:10px 14px;border-radius:10px;cursor:pointer;transition:transform .06s,border-color .2s,background .2s}
     .btn:hover{transform:translateY(-1px)} .btn.primary{background:linear-gradient(180deg,#27314a,#1f2740);border-color:#2a3a64}
     .submenu{display:none;gap:8px;padding:12px 14px;border-bottom:1px dashed var(--border)} .submenu.open{display:flex;flex-wrap:wrap}
     .tabs{display:flex;gap:6px;padding:12px 14px;border-bottom:1px dashed var(--border)} .tab{border:1px solid var(--border);background:#14151b;color:#979aa1;padding:6px 10px;border-radius:999px;cursor:pointer;font-size:13px} .tab.active{color:#fff;border-color:#34406a;background:#21263b}
@@ -58,20 +58,49 @@
     const STATE = { loaded:false, data:{toSchool:[],toStation:[]}, direction:null, dayType:'평일' };
     const $ = s => document.querySelector(s); const $$ = s => Array.from(document.querySelectorAll(s));
     function showStatus(msg, show=true){ const s=$("#status"); if(!s) return; s.textContent=msg; s.style.display=show?"inline-flex":"none"; }
-    function fmtTime(v){ if(v==null) return ""; let s=String(v).trim(); if(!s) return ""; const m=s.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/); return m?m[1].padStart(2,"0")+":"+m[2]:s; }
+
+    // Strip seconds; handle '오전/오후' and 'AM/PM'
+    function fmtTime(v){
+      if(v==null) return "";
+      let s = String(v).trim();
+      if(!s) return "";
+      // 오전/오후 h:mm[:ss]
+      let m = s.match(/^(오전|오후)\s*(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/);
+      if(m){
+        let h = parseInt(m[2],10), min = m[3].padStart(2,"0");
+        const isPM = m[1]==="오후";
+        if(isPM && h!==12) h+=12;
+        if(!isPM && h===12) h=0;
+        return String(h).padStart(2,"0")+":"+min;
+      }
+      // h:mm[:ss] AM/PM
+      m = s.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)$/i);
+      if(m){
+        let h = parseInt(m[1],10), min = m[2];
+        const isPM = m[3].toUpperCase()==="PM";
+        if(isPM && h!==12) h+=12;
+        if(!isPM && h===12) h=0;
+        return String(h).padStart(2,"0")+":"+min;
+      }
+      // h:mm or h:mm:ss
+      m = s.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+      if(m){
+        return m[1].padStart(2,"0")+":"+m[2];
+      }
+      return s;
+    }
 
     async function ensureDataLoaded(){
       if(STATE.loaded) return;
       showStatus("데이터 불러오는 중…", true);
       try{
         const res = await fetch("./bus_schedule.json", { cache:"no-store" });
-        if(!res.ok) throw new Error("bus_schedule.json을 불러올 수 없습니다 ("+res.status+")");
+        if(!res.ok) throw new Error("bus_schedule.json 불러오기 실패 ("+res.status+")");
         const j = await res.json();
         STATE.data = j;
         STATE.loaded = true;
       }catch(e){
-        console.error(e);
-        alert(e.message || e);
+        console.error(e); alert(e.message || e);
       }finally{
         showStatus("", false);
       }
@@ -87,7 +116,8 @@
       const cols=dir==="toSchool"?["회차","시간","영남루","밀양역","부산대"]:["회차","시간","부산대","밀양역","영남루"];
       const table=document.createElement("table"); const thead=document.createElement("thead"); const trh=document.createElement("tr"); for(const c of cols){ const th=document.createElement("th"); th.textContent=c; trh.appendChild(th);} thead.appendChild(trh); table.appendChild(thead);
       const tbody=document.createElement("tbody");
-      for(const r of rows){ const tr=document.createElement("tr");
+      for(const r of rows){
+        const tr=document.createElement("tr");
         const arr=dir==="toSchool"?[r.run||"",fmtTime(r.t["시간"]||""),fmtTime(r.t["영남루"]||""),fmtTime(r.t["밀양역"]||""),fmtTime(r.t["부산대"]||"")]
                                  :[r.run||"",fmtTime(r.t["시간"]||""),fmtTime(r.t["부산대"]||""),fmtTime(r.t["밀양역"]||""),fmtTime(r.t["영남루"]||"")];
         for(const v of arr){ const td=document.createElement("td"); td.textContent=v; tr.appendChild(td); } tbody.appendChild(tr);
