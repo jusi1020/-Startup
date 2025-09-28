@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>캠퍼스 가이드 | 버스·식단</title>
-  <meta name="build" content="2025-09-28T18:05+09:00-active-states" />
+  <meta name="build" content="2025-09-28T18:25+09:00-next-highlight" />
   <style>
-    :root { --bg:#0b0b0c; --card:#151518; --muted:#979aa1; --text:#e9e9ee; --border:#23232a; --accent:#34406a; --accentBg:#21263b; }
+    :root { --bg:#0b0b0c; --card:#151518; --muted:#979aa1; --text:#e9e9ee; --border:#23232a; --accent:#34406a; --accentBg:#21263b; --highlight:#22427a; --highlightOutline:#4267b2; }
     *{box-sizing:border-box} html,body{height:100%}
     body{margin:0;font-family:ui-sans-serif,-apple-system,Segoe UI,Roboto,Helvetica,Arial,Apple SD Gothic Neo,Malgun Gothic,Noto Sans KR,'맑은 고딕',sans-serif;color:var(--text);background:radial-gradient(1000px 500px at 10% -20%,#182033 0%,#0d101a 40%,var(--bg) 80%);}
     .wrap{max-width:980px;margin:40px auto;padding:0 16px}
@@ -38,6 +38,12 @@
     .meal-title{font-weight:700;margin:0 0 8px 0}
     .meal-items{margin:0;padding-left:18px}
     .status{display:none;border:1px solid #203847;background:#14222b;color:#9cc7da;padding:4px 8px;border-radius:999px;font-size:12px}
+
+    /* Next bus highlight */
+    tr.next { background: rgba(34, 66, 122, 0.22) !important; position: relative; }
+    tr.next td { border-top-color: rgba(66, 103, 178, 0.4); }
+    .soon { margin-left:8px; padding:2px 6px; border-radius:999px; font-size:11px; background:#203a6b; color:#d8e6ff; border:1px solid var(--highlightOutline); }
+
     footer{margin-top:28px;color:#979aa1;font-size:12px}
   </style>
 </head>
@@ -80,7 +86,7 @@
       </div>
     </section>
 
-    <footer>build: <code>active-states</code> · 데이터 파일: <code>bus_schedule.json</code>, <code>menu.json</code></footer>
+    <footer>build: <code>next-highlight</code> · 데이터 파일: <code>bus_schedule.json</code>, <code>menu.json</code></footer>
   </div>
 
   <script>
@@ -99,7 +105,10 @@
       mealDate: null,
 
       // UI mode
-      mode: null       // 'bus' | 'meal'
+      mode: null,      // 'bus' | 'meal'
+
+      // timers
+      nextTimerId: null
     };
 
     // ===== Utilities =====
@@ -135,6 +144,19 @@
       m = s.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
       if(m) return m[1].padStart(2,"0")+":"+m[2];
       return s;
+    }
+
+    function toMinutes(hhmm){
+      const s = fmtTime(hhmm);
+      if(!s) return NaN;
+      const m = s.match(/^(\d{2}):(\d{2})$/);
+      if(!m) return NaN;
+      return parseInt(m[1],10)*60 + parseInt(m[2],10);
+    }
+
+    function nowMinutes(){
+      const d = new Date();
+      return d.getHours()*60 + d.getMinutes(); // local time
     }
 
     function todayISO(){
@@ -181,6 +203,10 @@
       STATE.mode = mode;
       $("#busBtn").classList.toggle("active", mode === "bus");
       $("#mealBtn").classList.toggle("active", mode === "meal");
+      // stop bus timer when leaving bus mode
+      if(mode !== "bus" && STATE.nextTimerId){
+        clearInterval(STATE.nextTimerId); STATE.nextTimerId = null;
+      }
     }
     function setDirectionActive(key){ // 'toSchool'|'toStation'|null
       $("#toSchoolBtn").classList.toggle("active", key === "toSchool");
@@ -192,6 +218,20 @@
     }
     function setBusActiveTab(dayType){
       $$("#busTabs .tab").forEach(t => t.classList.toggle("active", t.dataset.day === dayType));
+    }
+
+    // ===== Next Bus Calculation =====
+    function findNextIndex(rows){
+      const nowMin = nowMinutes();
+      let idx = -1, best = Infinity;
+      rows.forEach((r, i) => {
+        const m = toMinutes(r.t["시간"] || "");
+        if(!Number.isFinite(m)) return;
+        if(m >= nowMin && m < best){
+          best = m; idx = i;
+        }
+      });
+      return idx; // -1 if none left today
     }
 
     // ===== Rendering (Bus) =====
@@ -219,6 +259,8 @@
         return;
       }
 
+      const nextIdx = findNextIndex(rows);
+
       const cols = directionKey === "toSchool"
         ? ["회차","시간","영남루","밀양역","부산대"]
         : ["회차","시간","부산대","밀양역","영남루"];
@@ -230,16 +272,40 @@
       thead.appendChild(trh); table.appendChild(thead);
 
       const tbody = document.createElement("tbody");
-      for(const r of rows){
+      rows.forEach((r, i) => {
         const tr = document.createElement("tr");
         const arr = directionKey === "toSchool"
           ? [r.run||"", fmtTime(r.t["시간"]||""), fmtTime(r.t["영남루"]||""), fmtTime(r.t["밀양역"]||""), fmtTime(r.t["부산대"]||"")]
           : [r.run||"", fmtTime(r.t["시간"]||""), fmtTime(r.t["부산대"]||""), fmtTime(r.t["밀양역"]||""), fmtTime(r.t["영남루"]||"")];
-        for(const v of arr){ const td=document.createElement("td"); td.textContent=v; tr.appendChild(td); }
+        arr.forEach((v, j) => {
+          const td = document.createElement("td");
+          td.textContent = v;
+          tr.appendChild(td);
+        });
+        if(i === nextIdx){
+          tr.classList.add("next");
+          // add "곧 출발" badge to 시간 cell (2nd column)
+          const timeCell = tr.children[1];
+          const badge = document.createElement("span");
+          badge.className = "soon";
+          badge.textContent = "곧 출발";
+          timeCell.appendChild(badge);
+          // scroll into view gently on first render
+          setTimeout(() => { tr.scrollIntoView({behavior:"smooth", block:"center"}); }, 50);
+        }
         tbody.appendChild(tr);
-      }
+      });
       table.appendChild(tbody);
       content.appendChild(table);
+
+      // set/refresh timer to update highlight every minute
+      if(STATE.nextTimerId){ clearInterval(STATE.nextTimerId); }
+      STATE.nextTimerId = setInterval(() => {
+        // re-render to recompute next
+        if(STATE.mode === "bus" && STATE.direction === directionKey && STATE.dayType === dayType){
+          renderBusTable(directionKey, dayType);
+        }
+      }, 60000);
     }
 
     // ===== Rendering (Meals) =====
@@ -335,6 +401,7 @@
         setDirectionActive("toSchool");
         $("#busTabs").style.display = "flex";
         setBusActiveTab(STATE.dayType);
+        setTopActive("bus");
         renderBusTable(STATE.direction, STATE.dayType);
       });
 
@@ -344,6 +411,7 @@
         setDirectionActive("toStation");
         $("#busTabs").style.display = "flex";
         setBusActiveTab(STATE.dayType);
+        setTopActive("bus");
         renderBusTable(STATE.direction, STATE.dayType);
       });
 
@@ -363,6 +431,7 @@
         const input = $("#mealDate");
         if(input && !input.value) input.value = todayISO();
         STATE.mealDate = input.value || todayISO();
+        setTopActive("meal");
         renderMeals(STATE.hall, STATE.mealDate);
       });
 
@@ -373,6 +442,7 @@
         const input = $("#mealDate");
         if(input && !input.value) input.value = todayISO();
         STATE.mealDate = input.value || todayISO();
+        setTopActive("meal");
         renderMeals(STATE.hall, STATE.mealDate);
       });
 
