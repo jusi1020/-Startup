@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>캠퍼스 가이드 | 버스·식단</title>
-  <meta name="build" content="2025-09-28T17:40+09:00-bus+meals-json" />
+  <meta name="build" content="2025-09-28T18:05+09:00-active-states" />
   <style>
-    :root { --bg:#0b0b0c; --card:#151518; --muted:#979aa1; --text:#e9e9ee; --border:#23232a; }
+    :root { --bg:#0b0b0c; --card:#151518; --muted:#979aa1; --text:#e9e9ee; --border:#23232a; --accent:#34406a; --accentBg:#21263b; }
     *{box-sizing:border-box} html,body{height:100%}
     body{margin:0;font-family:ui-sans-serif,-apple-system,Segoe UI,Roboto,Helvetica,Arial,Apple SD Gothic Neo,Malgun Gothic,Noto Sans KR,'맑은 고딕',sans-serif;color:var(--text);background:radial-gradient(1000px 500px at 10% -20%,#182033 0%,#0d101a 40%,var(--bg) 80%);}
     .wrap{max-width:980px;margin:40px auto;padding:0 16px}
@@ -14,12 +14,14 @@
     .card{background:linear-gradient(180deg,#171922,#12131a);border:1px solid var(--border);border-radius:16px;box-shadow:0 10px 24px rgba(0,0,0,.35);overflow:hidden;margin-top:20px}
     .toolbar{display:flex;gap:10px;padding:14px;border-bottom:1px solid var(--border);align-items:center;background:rgba(255,255,255,.02)}
     .btn{appearance:none;border:1px solid var(--border);background:#191a21;color:#e9e9ee;font-weight:600;padding:10px 14px;border-radius:10px;cursor:pointer;transition:transform .06s,border-color .2s,background .2s;white-space:nowrap}
-    .btn:hover{transform:translateY(-1px)} .btn.primary{background:linear-gradient(180deg,#27314a,#1f2740);border-color:#2a3a64}
+    .btn:hover{transform:translateY(-1px)} .btn:active{transform:translateY(0)}
+    .btn.primary{background:linear-gradient(180deg,#27314a,#1f2740);border-color:#2a3a64}
+    .btn.active{color:#fff;border-color:var(--accent);background:var(--accentBg)}
     .submenu{display:none;gap:8px;padding:12px 14px;border-bottom:1px dashed var(--border)}
     .submenu.open{display:flex;flex-wrap:wrap}
     .tabs{display:flex;gap:6px;padding:12px 14px;border-bottom:1px dashed var(--border)}
     .tab{border:1px solid var(--border);background:#14151b;color:#979aa1;padding:6px 10px;border-radius:999px;cursor:pointer;font-size:13px}
-    .tab.active{color:#fff;border-color:#34406a;background:#21263b}
+    .tab.active{color:#fff;border-color:var(--accent);background:var(--accentBg)}
     .content{padding:16px}
     .title-row{display:flex;gap:10px;align-items:baseline;margin-bottom:8px}
     .title-row h2{margin:0;font-size:20px;font-weight:700}
@@ -47,7 +49,7 @@
 
     <section class="card" id="app">
       <div class="toolbar">
-        <button id="busBtn" class="btn primary">🚌 버스</button>
+        <button id="busBtn" class="btn">🚌 버스</button>
         <button id="mealBtn" class="btn">🍽️ 식단</button>
         <span id="status" class="status">불러오는 중…</span>
       </div>
@@ -78,7 +80,7 @@
       </div>
     </section>
 
-    <footer>build: <code>bus+meals-json</code> · 데이터 파일: <code>bus_schedule.json</code>, <code>menu.json</code></footer>
+    <footer>build: <code>active-states</code> · 데이터 파일: <code>bus_schedule.json</code>, <code>menu.json</code></footer>
   </div>
 
   <script>
@@ -92,9 +94,12 @@
 
       // Meals
       mealsLoaded: false,
-      meals: {},       // structure: { "기숙사": { "YYYY-MM-DD": { "아침":[], "점심":[], "저녁":[] } }, "학생회관": {...} }
+      meals: {},       // { "기숙사": { "YYYY-MM-DD": {...} }, "학생회관": {...} }
       hall: null,      // '기숙사' | '학생회관'
-      mealDate: null
+      mealDate: null,
+
+      // UI mode
+      mode: null       // 'bus' | 'meal'
     };
 
     // ===== Utilities =====
@@ -135,7 +140,7 @@
     function todayISO(){
       const d = new Date();
       const tz = new Date(d.getTime() - d.getTimezoneOffset()*60000);
-      return tz.toISOString().slice(0,10); // YYYY-MM-DD
+      return tz.toISOString().slice(0,10);
     }
 
     // ===== Data Loaders =====
@@ -171,11 +176,25 @@
       }
     }
 
-    // ===== Rendering (Bus) =====
+    // ===== Active Helpers =====
+    function setTopActive(mode){ // 'bus' | 'meal' | null
+      STATE.mode = mode;
+      $("#busBtn").classList.toggle("active", mode === "bus");
+      $("#mealBtn").classList.toggle("active", mode === "meal");
+    }
+    function setDirectionActive(key){ // 'toSchool'|'toStation'|null
+      $("#toSchoolBtn").classList.toggle("active", key === "toSchool");
+      $("#toStationBtn").classList.toggle("active", key === "toStation");
+    }
+    function setHallActive(hall){ // '기숙사'|'학생회관'|null
+      $("#hallDormBtn").classList.toggle("active", hall === "기숙사");
+      $("#hallUnionBtn").classList.toggle("active", hall === "학생회관");
+    }
     function setBusActiveTab(dayType){
       $$("#busTabs .tab").forEach(t => t.classList.toggle("active", t.dataset.day === dayType));
     }
 
+    // ===== Rendering (Bus) =====
     function renderBusTable(directionKey, dayType){
       const content=$("#content");
       const data = STATE.bus[directionKey] || [];
@@ -281,37 +300,39 @@
     function initUI(){
       // Top buttons
       $("#busBtn").addEventListener("click", async () => {
-        // Toggle bus panel
-        $("#busSubmenu").classList.toggle("open");
-        $("#busTabs").style.display = $("#busSubmenu").classList.contains("open") ? "flex" : "none";
-        // Hide meals
+        // mode = bus
+        setTopActive("bus");
+        // Toggle bus panel on, meals off
+        $("#busSubmenu").classList.add("open");
+        $("#busTabs").style.display = "flex";
         $("#mealSubmenu").classList.remove("open");
         $("#mealControls").style.display = "none";
-        if($("#busSubmenu").classList.contains("open") && !STATE.busLoaded){
+        if(!STATE.busLoaded){
           await ensureBusLoaded();
         }
       });
 
       $("#mealBtn").addEventListener("click", async () => {
-        // Toggle meal panel
-        $("#mealSubmenu").classList.toggle("open");
-        $("#mealControls").style.display = $("#mealSubmenu").classList.contains("open") ? "flex" : "none";
-        // Hide bus
+        // mode = meal
+        setTopActive("meal");
+        // Toggle meal panel on, bus off
+        $("#mealSubmenu").classList.add("open");
+        $("#mealControls").style.display = "flex";
         $("#busSubmenu").classList.remove("open");
         $("#busTabs").style.display = "none";
-        if($("#mealSubmenu").classList.contains("open") && !STATE.mealsLoaded){
+        if(!STATE.mealsLoaded){
           await ensureMealsLoaded();
-          // default date = today
           const input = $("#mealDate");
           if(input && !input.value) input.value = todayISO();
           STATE.mealDate = input.value || todayISO();
         }
       });
 
-      // Bus clicks
+      // Bus direction
       $("#toSchoolBtn").addEventListener("click", async () => {
         if(!STATE.busLoaded) await ensureBusLoaded();
         STATE.direction = "toSchool";
+        setDirectionActive("toSchool");
         $("#busTabs").style.display = "flex";
         setBusActiveTab(STATE.dayType);
         renderBusTable(STATE.direction, STATE.dayType);
@@ -320,6 +341,7 @@
       $("#toStationBtn").addEventListener("click", async () => {
         if(!STATE.busLoaded) await ensureBusLoaded();
         STATE.direction = "toStation";
+        setDirectionActive("toStation");
         $("#busTabs").style.display = "flex";
         setBusActiveTab(STATE.dayType);
         renderBusTable(STATE.direction, STATE.dayType);
@@ -333,10 +355,11 @@
         });
       });
 
-      // Meal clicks
+      // Meals hall
       $("#hallDormBtn").addEventListener("click", async () => {
         if(!STATE.mealsLoaded) await ensureMealsLoaded();
         STATE.hall = "기숙사";
+        setHallActive("기숙사");
         const input = $("#mealDate");
         if(input && !input.value) input.value = todayISO();
         STATE.mealDate = input.value || todayISO();
@@ -346,6 +369,7 @@
       $("#hallUnionBtn").addEventListener("click", async () => {
         if(!STATE.mealsLoaded) await ensureMealsLoaded();
         STATE.hall = "학생회관";
+        setHallActive("학생회관");
         const input = $("#mealDate");
         if(input && !input.value) input.value = todayISO();
         STATE.mealDate = input.value || todayISO();
