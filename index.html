@@ -3,68 +3,114 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>밀양역 ↔ 부산대 버스시간표</title>
-  <meta name="build" content="2025-09-28T17:20+09:00-json-only-no-seconds" />
+  <title>캠퍼스 가이드 | 버스·식단</title>
+  <meta name="build" content="2025-09-28T17:40+09:00-bus+meals-json" />
   <style>
-    :root { --bg:#0b0b0c; --border:#23232a; --text:#e9e9ee; --muted:#979aa1; }
+    :root { --bg:#0b0b0c; --card:#151518; --muted:#979aa1; --text:#e9e9ee; --border:#23232a; }
     *{box-sizing:border-box} html,body{height:100%}
     body{margin:0;font-family:ui-sans-serif,-apple-system,Segoe UI,Roboto,Helvetica,Arial,Apple SD Gothic Neo,Malgun Gothic,Noto Sans KR,'맑은 고딕',sans-serif;color:var(--text);background:radial-gradient(1000px 500px at 10% -20%,#182033 0%,#0d101a 40%,var(--bg) 80%);}
     .wrap{max-width:980px;margin:40px auto;padding:0 16px}
-    header h1{font-size:28px;margin:0 0 4px} header p{margin:0;color:var(--muted);font-size:14px}
+    header h1{font-size:28px;margin:0 0 4px}
     .card{background:linear-gradient(180deg,#171922,#12131a);border:1px solid var(--border);border-radius:16px;box-shadow:0 10px 24px rgba(0,0,0,.35);overflow:hidden;margin-top:20px}
     .toolbar{display:flex;gap:10px;padding:14px;border-bottom:1px solid var(--border);align-items:center;background:rgba(255,255,255,.02)}
-    .btn{appearance:none;border:1px solid var(--border);background:#191a21;color:#e9e9ee;font-weight:600;padding:10px 14px;border-radius:10px;cursor:pointer;transition:transform .06s,border-color .2s,background .2s}
+    .btn{appearance:none;border:1px solid var(--border);background:#191a21;color:#e9e9ee;font-weight:600;padding:10px 14px;border-radius:10px;cursor:pointer;transition:transform .06s,border-color .2s,background .2s;white-space:nowrap}
     .btn:hover{transform:translateY(-1px)} .btn.primary{background:linear-gradient(180deg,#27314a,#1f2740);border-color:#2a3a64}
-    .submenu{display:none;gap:8px;padding:12px 14px;border-bottom:1px dashed var(--border)} .submenu.open{display:flex;flex-wrap:wrap}
-    .tabs{display:flex;gap:6px;padding:12px 14px;border-bottom:1px dashed var(--border)} .tab{border:1px solid var(--border);background:#14151b;color:#979aa1;padding:6px 10px;border-radius:999px;cursor:pointer;font-size:13px} .tab.active{color:#fff;border-color:#34406a;background:#21263b}
-    .content{padding:16px} .title-row{display:flex;gap:10px;align-items:baseline;margin-bottom:8px} .title-row h2{margin:0;font-size:20px;font-weight:700} .title-row .meta{font-size:12px;color:#979aa1}
+    .submenu{display:none;gap:8px;padding:12px 14px;border-bottom:1px dashed var(--border)}
+    .submenu.open{display:flex;flex-wrap:wrap}
+    .tabs{display:flex;gap:6px;padding:12px 14px;border-bottom:1px dashed var(--border)}
+    .tab{border:1px solid var(--border);background:#14151b;color:#979aa1;padding:6px 10px;border-radius:999px;cursor:pointer;font-size:13px}
+    .tab.active{color:#fff;border-color:#34406a;background:#21263b}
+    .content{padding:16px}
+    .title-row{display:flex;gap:10px;align-items:baseline;margin-bottom:8px}
+    .title-row h2{margin:0;font-size:20px;font-weight:700}
+    .title-row .meta{font-size:12px;color:#979aa1}
+    .controls{display:flex;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px dashed var(--border)}
+    .controls label{font-size:13px;color:#cfd2d8}
+    input[type="date"]{background:#14151b;border:1px solid var(--border);border-radius:8px;padding:6px 8px;color:#e9e9ee}
     table{width:100%;border-collapse:collapse;border-radius:12px;border:1px solid var(--border);background:#0f1118;overflow:hidden}
     thead th{background:#171a24;color:#d6d8de;text-align:left;padding:10px 12px;font-size:13px;border-bottom:1px solid var(--border)}
-    tbody td{border-top:1px solid var(--border);padding:9px 12px;font-size:14px;color:#e8eaf0} tbody tr:hover{background:rgba(255,255,255,.02)}
+    tbody td{border-top:1px solid var(--border);padding:9px 12px;font-size:14px;color:#e8eaf0}
+    tbody tr:hover{background:rgba(255,255,255,.02)}
     .empty{padding:24px;text-align:center;color:#979aa1}
+    .meal-card{border:1px solid var(--border);border-radius:12px;padding:12px 14px;background:#11131a}
+    .meal-title{font-weight:700;margin:0 0 8px 0}
+    .meal-items{margin:0;padding-left:18px}
+    .status{display:none;border:1px solid #203847;background:#14222b;color:#9cc7da;padding:4px 8px;border-radius:999px;font-size:12px}
+    footer{margin-top:28px;color:#979aa1;font-size:12px}
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <h1>밀양 ↔ 부산대 버스시간표</h1>
-      <p>버스를 누르고 방향(학교로 / 역으로)과 요일(평일 / 주말·공휴일 / 방학)을 선택하세요.</p>
+      <h1 id="appTitle">캠퍼스 가이드 | 버스·식단</h1>
     </header>
 
-    <section class="card">
+    <section class="card" id="app">
       <div class="toolbar">
         <button id="busBtn" class="btn primary">🚌 버스</button>
-        <span id="status" style="display:none;border:1px solid #203847;background:#14222b;color:#9cc7da;padding:4px 8px;border-radius:999px;font-size:12px">데이터 불러오는 중…</span>
+        <button id="mealBtn" class="btn">🍽️ 식단</button>
+        <span id="status" class="status">불러오는 중…</span>
       </div>
 
-      <div id="submenu" class="submenu">
+      <!-- Bus submenu -->
+      <div id="busSubmenu" class="submenu">
         <button id="toSchoolBtn" class="btn">학교로 <span class="meta" style="opacity:.75;font-weight:500">(밀양→부산대)</span></button>
         <button id="toStationBtn" class="btn">역으로 <span class="meta" style="opacity:.75;font-weight:500">(부산대→밀양)</span></button>
       </div>
-
-      <div id="dayTabs" class="tabs" style="display:none">
+      <div id="busTabs" class="tabs" style="display:none;">
         <button class="tab" data-day="평일">평일</button>
         <button class="tab" data-day="주말·공휴일">주말·공휴일</button>
         <button class="tab" data-day="방학">방학</button>
       </div>
 
-      <div id="content" class="content">
-        <div class="empty">방향을 선택하면 시간표가 표시됩니다.</div>
+      <!-- Meal submenu + controls -->
+      <div id="mealSubmenu" class="submenu">
+        <button id="hallDormBtn" class="btn">기숙사</button>
+        <button id="hallUnionBtn" class="btn">학생회관</button>
+      </div>
+      <div id="mealControls" class="controls" style="display:none;">
+        <label for="mealDate">날짜</label>
+        <input id="mealDate" type="date" />
+      </div>
+
+      <div class="content" id="content">
+        <div class="empty">상단의 메뉴에서 기능을 선택하세요.</div>
       </div>
     </section>
+
+    <footer>build: <code>bus+meals-json</code> · 데이터 파일: <code>bus_schedule.json</code>, <code>menu.json</code></footer>
   </div>
 
   <script>
-    const STATE = { loaded:false, data:{toSchool:[],toStation:[]}, direction:null, dayType:'평일' };
-    const $ = s => document.querySelector(s); const $$ = s => Array.from(document.querySelectorAll(s));
-    function showStatus(msg, show=true){ const s=$("#status"); if(!s) return; s.textContent=msg; s.style.display=show?"inline-flex":"none"; }
+    // ===== Global State =====
+    const STATE = {
+      // Bus
+      busLoaded: false,
+      bus: { toSchool: [], toStation: [] },
+      direction: null, // 'toSchool' | 'toStation'
+      dayType: '평일',
 
-    // Strip seconds; handle '오전/오후' and 'AM/PM'
+      // Meals
+      mealsLoaded: false,
+      meals: {},       // structure: { "기숙사": { "YYYY-MM-DD": { "아침":[], "점심":[], "저녁":[] } }, "학생회관": {...} }
+      hall: null,      // '기숙사' | '학생회관'
+      mealDate: null
+    };
+
+    // ===== Utilities =====
+    const $ = s => document.querySelector(s);
+    const $$ = s => Array.from(document.querySelectorAll(s));
+
+    function showStatus(msg, show=true){
+      const s=$("#status"); if(!s) return;
+      s.textContent = msg; s.style.display = show ? "inline-flex" : "none";
+    }
+
+    // Remove seconds; handle 오전/오후 & AM/PM; return HH:MM
     function fmtTime(v){
       if(v==null) return "";
       let s = String(v).trim();
       if(!s) return "";
-      // 오전/오후 h:mm[:ss]
       let m = s.match(/^(오전|오후)\s*(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/);
       if(m){
         let h = parseInt(m[2],10), min = m[3].padStart(2,"0");
@@ -73,7 +119,6 @@
         if(!isPM && h===12) h=0;
         return String(h).padStart(2,"0")+":"+min;
       }
-      // h:mm[:ss] AM/PM
       m = s.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)$/i);
       if(m){
         let h = parseInt(m[1],10), min = m[2];
@@ -82,23 +127,27 @@
         if(!isPM && h===12) h=0;
         return String(h).padStart(2,"0")+":"+min;
       }
-      // h:mm or h:mm:ss
       m = s.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
-      if(m){
-        return m[1].padStart(2,"0")+":"+m[2];
-      }
+      if(m) return m[1].padStart(2,"0")+":"+m[2];
       return s;
     }
 
-    async function ensureDataLoaded(){
-      if(STATE.loaded) return;
-      showStatus("데이터 불러오는 중…", true);
+    function todayISO(){
+      const d = new Date();
+      const tz = new Date(d.getTime() - d.getTimezoneOffset()*60000);
+      return tz.toISOString().slice(0,10); // YYYY-MM-DD
+    }
+
+    // ===== Data Loaders =====
+    async function ensureBusLoaded(){
+      if(STATE.busLoaded) return;
+      showStatus("버스 데이터 불러오는 중…", true);
       try{
         const res = await fetch("./bus_schedule.json", { cache:"no-store" });
-        if(!res.ok) throw new Error("bus_schedule.json 불러오기 실패 ("+res.status+")");
+        if(!res.ok) throw new Error("bus_schedule.json 불러오기 실패("+res.status+")");
         const j = await res.json();
-        STATE.data = j;
-        STATE.loaded = true;
+        STATE.bus = j;
+        STATE.busLoaded = true;
       }catch(e){
         console.error(e); alert(e.message || e);
       }finally{
@@ -106,38 +155,209 @@
       }
     }
 
-    function setActiveTab(d){ $$("#dayTabs .tab").forEach(t=>t.classList.toggle("active",t.dataset.day===d)); }
-    function renderTable(dir,day){
-      const content=$("#content"); const rows=(STATE.data[dir]||[]).filter(d=>d.day_type===day); content.innerHTML="";
-      const title=document.createElement("div"); title.className="title-row";
-      const h2=document.createElement("h2"); h2.textContent=dir==="toSchool"?"밀양 → 부산대 (학교로)":"부산대 → 밀양 (역으로)";
-      const meta=document.createElement("span"); meta.className="meta"; meta.textContent=`요일: ${day}`; title.appendChild(h2); title.appendChild(meta); content.appendChild(title);
-      if(rows.length===0){ const e=document.createElement("div"); e.className="empty"; e.textContent="해당 조건의 시간표가 없습니다."; content.appendChild(e); return; }
-      const cols=dir==="toSchool"?["회차","시간","영남루","밀양역","부산대"]:["회차","시간","부산대","밀양역","영남루"];
-      const table=document.createElement("table"); const thead=document.createElement("thead"); const trh=document.createElement("tr"); for(const c of cols){ const th=document.createElement("th"); th.textContent=c; trh.appendChild(th);} thead.appendChild(trh); table.appendChild(thead);
-      const tbody=document.createElement("tbody");
-      for(const r of rows){
-        const tr=document.createElement("tr");
-        const arr=dir==="toSchool"?[r.run||"",fmtTime(r.t["시간"]||""),fmtTime(r.t["영남루"]||""),fmtTime(r.t["밀양역"]||""),fmtTime(r.t["부산대"]||"")]
-                                 :[r.run||"",fmtTime(r.t["시간"]||""),fmtTime(r.t["부산대"]||""),fmtTime(r.t["밀양역"]||""),fmtTime(r.t["영남루"]||"")];
-        for(const v of arr){ const td=document.createElement("td"); td.textContent=v; tr.appendChild(td); } tbody.appendChild(tr);
+    async function ensureMealsLoaded(){
+      if(STATE.mealsLoaded) return;
+      showStatus("식단 데이터 불러오는 중…", true);
+      try{
+        const res = await fetch("./menu.json", { cache:"no-store" });
+        if(!res.ok) throw new Error("menu.json 불러오기 실패("+res.status+")");
+        const j = await res.json();
+        STATE.meals = j || {};
+        STATE.mealsLoaded = true;
+      }catch(e){
+        console.error(e); alert(e.message || e);
+      }finally{
+        showStatus("", false);
       }
-      table.appendChild(tbody); content.appendChild(table);
     }
 
-    function initUI(){
-      $("#busBtn").addEventListener("click", async () => {
-        const m=$("#submenu"); m.classList.toggle("open"); $("#dayTabs").style.display=m.classList.contains("open")?"flex":"none";
-        if(m.classList.contains("open")&&!STATE.loaded){ await ensureDataLoaded(); }
-      });
-      $("#toSchoolBtn").addEventListener("click", async () => {
-        if(!STATE.loaded) await ensureDataLoaded(); STATE.direction="toSchool"; $("#dayTabs").style.display="flex"; setActiveTab(STATE.dayType); renderTable(STATE.direction,STATE.dayType);
-      });
-      $("#toStationBtn").addEventListener("click", async () => {
-        if(!STATE.loaded) await ensureDataLoaded(); STATE.direction="toStation"; $("#dayTabs").style.display="flex"; setActiveTab(STATE.dayType); renderTable(STATE.direction,STATE.dayType);
-      });
-      $$("#dayTabs .tab").forEach(tab=>tab.addEventListener("click",()=>{ STATE.dayType=tab.dataset.day; setActiveTab(STATE.dayType); if(STATE.direction) renderTable(STATE.direction,STATE.dayType);}));
+    // ===== Rendering (Bus) =====
+    function setBusActiveTab(dayType){
+      $$("#busTabs .tab").forEach(t => t.classList.toggle("active", t.dataset.day === dayType));
     }
+
+    function renderBusTable(directionKey, dayType){
+      const content=$("#content");
+      const data = STATE.bus[directionKey] || [];
+      const rows = data.filter(d => d.day_type === dayType);
+      content.innerHTML = "";
+
+      const title = document.createElement("div");
+      title.className = "title-row";
+      const h2 = document.createElement("h2");
+      h2.textContent = directionKey === "toSchool" ? "밀양 → 부산대 (학교로)" : "부산대 → 밀양 (역으로)";
+      const meta = document.createElement("span");
+      meta.className = "meta";
+      meta.textContent = `요일: ${dayType}`;
+      title.appendChild(h2); title.appendChild(meta);
+      content.appendChild(title);
+
+      if(rows.length === 0){
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "해당 조건의 시간표가 없습니다.";
+        content.appendChild(empty);
+        return;
+      }
+
+      const cols = directionKey === "toSchool"
+        ? ["회차","시간","영남루","밀양역","부산대"]
+        : ["회차","시간","부산대","밀양역","영남루"];
+
+      const table = document.createElement("table");
+      const thead = document.createElement("thead");
+      const trh = document.createElement("tr");
+      for(const c of cols){ const th=document.createElement("th"); th.textContent=c; trh.appendChild(th); }
+      thead.appendChild(trh); table.appendChild(thead);
+
+      const tbody = document.createElement("tbody");
+      for(const r of rows){
+        const tr = document.createElement("tr");
+        const arr = directionKey === "toSchool"
+          ? [r.run||"", fmtTime(r.t["시간"]||""), fmtTime(r.t["영남루"]||""), fmtTime(r.t["밀양역"]||""), fmtTime(r.t["부산대"]||"")]
+          : [r.run||"", fmtTime(r.t["시간"]||""), fmtTime(r.t["부산대"]||""), fmtTime(r.t["밀양역"]||""), fmtTime(r.t["영남루"]||"")];
+        for(const v of arr){ const td=document.createElement("td"); td.textContent=v; tr.appendChild(td); }
+        tbody.appendChild(tr);
+      }
+      table.appendChild(tbody);
+      content.appendChild(table);
+    }
+
+    // ===== Rendering (Meals) =====
+    function renderMeals(hall, ymd){
+      const content=$("#content");
+      content.innerHTML = "";
+
+      const title = document.createElement("div");
+      title.className = "title-row";
+      const h2 = document.createElement("h2");
+      h2.textContent = `식단 · ${hall}`;
+      const meta = document.createElement("span");
+      meta.className = "meta";
+      meta.textContent = `날짜: ${ymd}`;
+      title.appendChild(h2); title.appendChild(meta);
+      content.appendChild(title);
+
+      const dataByHall = STATE.meals[hall] || {};
+      const dayData = dataByHall[ymd] || null;
+
+      if(!dayData){
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "해당 날짜의 식단 정보가 없습니다.";
+        content.appendChild(empty);
+        return;
+      }
+
+      const mealsOrder = ["아침","점심","저녁"];
+      for(const meal of mealsOrder){
+        const items = dayData[meal] || [];
+        const card = document.createElement("div");
+        card.className = "meal-card";
+        const h = document.createElement("p");
+        h.className = "meal-title";
+        h.textContent = meal;
+        card.appendChild(h);
+        if(items.length === 0){
+          const em = document.createElement("div");
+          em.className = "empty";
+          em.textContent = "등록된 항목이 없습니다.";
+          card.appendChild(em);
+        } else {
+          const ul = document.createElement("ul");
+          ul.className = "meal-items";
+          items.forEach(line => {
+            const li = document.createElement("li");
+            li.textContent = line;
+            ul.appendChild(li);
+          });
+          card.appendChild(ul);
+        }
+        content.appendChild(card);
+      }
+    }
+
+    // ===== Event Wiring =====
+    function initUI(){
+      // Top buttons
+      $("#busBtn").addEventListener("click", async () => {
+        // Toggle bus panel
+        $("#busSubmenu").classList.toggle("open");
+        $("#busTabs").style.display = $("#busSubmenu").classList.contains("open") ? "flex" : "none";
+        // Hide meals
+        $("#mealSubmenu").classList.remove("open");
+        $("#mealControls").style.display = "none";
+        if($("#busSubmenu").classList.contains("open") && !STATE.busLoaded){
+          await ensureBusLoaded();
+        }
+      });
+
+      $("#mealBtn").addEventListener("click", async () => {
+        // Toggle meal panel
+        $("#mealSubmenu").classList.toggle("open");
+        $("#mealControls").style.display = $("#mealSubmenu").classList.contains("open") ? "flex" : "none";
+        // Hide bus
+        $("#busSubmenu").classList.remove("open");
+        $("#busTabs").style.display = "none";
+        if($("#mealSubmenu").classList.contains("open") && !STATE.mealsLoaded){
+          await ensureMealsLoaded();
+          // default date = today
+          const input = $("#mealDate");
+          if(input && !input.value) input.value = todayISO();
+          STATE.mealDate = input.value || todayISO();
+        }
+      });
+
+      // Bus clicks
+      $("#toSchoolBtn").addEventListener("click", async () => {
+        if(!STATE.busLoaded) await ensureBusLoaded();
+        STATE.direction = "toSchool";
+        $("#busTabs").style.display = "flex";
+        setBusActiveTab(STATE.dayType);
+        renderBusTable(STATE.direction, STATE.dayType);
+      });
+
+      $("#toStationBtn").addEventListener("click", async () => {
+        if(!STATE.busLoaded) await ensureBusLoaded();
+        STATE.direction = "toStation";
+        $("#busTabs").style.display = "flex";
+        setBusActiveTab(STATE.dayType);
+        renderBusTable(STATE.direction, STATE.dayType);
+      });
+
+      $$("#busTabs .tab").forEach(tab => {
+        tab.addEventListener("click", () => {
+          STATE.dayType = tab.dataset.day;
+          setBusActiveTab(STATE.dayType);
+          if(STATE.direction) renderBusTable(STATE.direction, STATE.dayType);
+        });
+      });
+
+      // Meal clicks
+      $("#hallDormBtn").addEventListener("click", async () => {
+        if(!STATE.mealsLoaded) await ensureMealsLoaded();
+        STATE.hall = "기숙사";
+        const input = $("#mealDate");
+        if(input && !input.value) input.value = todayISO();
+        STATE.mealDate = input.value || todayISO();
+        renderMeals(STATE.hall, STATE.mealDate);
+      });
+
+      $("#hallUnionBtn").addEventListener("click", async () => {
+        if(!STATE.mealsLoaded) await ensureMealsLoaded();
+        STATE.hall = "학생회관";
+        const input = $("#mealDate");
+        if(input && !input.value) input.value = todayISO();
+        STATE.mealDate = input.value || todayISO();
+        renderMeals(STATE.hall, STATE.mealDate);
+      });
+
+      $("#mealDate").addEventListener("change", () => {
+        STATE.mealDate = $("#mealDate").value || todayISO();
+        if(STATE.hall) renderMeals(STATE.hall, STATE.mealDate);
+      });
+    }
+
     document.addEventListener("DOMContentLoaded", initUI);
   </script>
 </body>
