@@ -4,19 +4,23 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>캠퍼스 가이드 | 버스·식단</title>
-  <meta name="build" content="2025-09-28T18:25+09:00-next-highlight" />
+  <meta name="build" content="2025-09-28T19:05+09:00-deeplink+next-by-stop" />
   <style>
-    :root { --bg:#0b0b0c; --card:#151518; --muted:#979aa1; --text:#e9e9ee; --border:#23232a; --accent:#34406a; --accentBg:#21263b; --highlight:#22427a; --highlightOutline:#4267b2; }
+    :root { --bg:#0b0b0c; --card:#151518; --muted:#979aa1; --text:#e9e9ee; --border:#23232a; --accent:#34406a; --accentBg:#21263b; --highlight:#22427a; --highlightOutline:#4267b2; --warn:#6a3f1e; --warnBg:#2b1b12; }
     *{box-sizing:border-box} html,body{height:100%}
     body{margin:0;font-family:ui-sans-serif,-apple-system,Segoe UI,Roboto,Helvetica,Arial,Apple SD Gothic Neo,Malgun Gothic,Noto Sans KR,'맑은 고딕',sans-serif;color:var(--text);background:radial-gradient(1000px 500px at 10% -20%,#182033 0%,#0d101a 40%,var(--bg) 80%);}
     .wrap{max-width:980px;margin:40px auto;padding:0 16px}
     header h1{font-size:28px;margin:0 0 4px}
     .card{background:linear-gradient(180deg,#171922,#12131a);border:1px solid var(--border);border-radius:16px;box-shadow:0 10px 24px rgba(0,0,0,.35);overflow:hidden;margin-top:20px}
-    .toolbar{display:flex;gap:10px;padding:14px;border-bottom:1px solid var(--border);align-items:center;background:rgba(255,255,255,.02)}
-    .btn{appearance:none;border:1px solid var(--border);background:#191a21;color:#e9e9ee;font-weight:600;padding:10px 14px;border-radius:10px;cursor:pointer;transition:transform .06s,border-color .2s,background .2s;white-space:nowrap}
+    .toolbar{display:flex;gap:10px;padding:14px;border-bottom:1px solid var(--border);align-items:center;background:rgba(255,255,255,.02);flex-wrap:wrap}
+    .btn{appearance:none;border:1px solid var(--border);background:#191a21;color:#e9e9ee;font-weight:600;padding:10px 14px;border-radius:10px;cursor:pointer;transition:transform .06s,border-color .2s,background .2s;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
     .btn:hover{transform:translateY(-1px)} .btn:active{transform:translateY(0)}
     .btn.primary{background:linear-gradient(180deg,#27314a,#1f2740);border-color:#2a3a64}
     .btn.active{color:#fff;border-color:var(--accent);background:var(--accentBg)}
+    .btn.ghost{background:transparent}
+    .btn.disabled, .btn[aria-disabled="true"]{opacity:.6; cursor:not-allowed}
+    .badge{display:inline-flex;align-items:center;gap:6px;background:#14222b;border:1px solid #203847;color:#9cc7da;padding:2px 6px;border-radius:999px;font-size:11px}
+    .badge.dev{background:var(--warnBg); border-color:var(--warn); color:#f3c29b}
     .submenu{display:none;gap:8px;padding:12px 14px;border-bottom:1px dashed var(--border)}
     .submenu.open{display:flex;flex-wrap:wrap}
     .tabs{display:flex;gap:6px;padding:12px 14px;border-bottom:1px dashed var(--border)}
@@ -31,7 +35,7 @@
     input[type="date"]{background:#14151b;border:1px solid var(--border);border-radius:8px;padding:6px 8px;color:#e9e9ee}
     table{width:100%;border-collapse:collapse;border-radius:12px;border:1px solid var(--border);background:#0f1118;overflow:hidden}
     thead th{background:#171a24;color:#d6d8de;text-align:left;padding:10px 12px;font-size:13px;border-bottom:1px solid var(--border)}
-    tbody td{border-top:1px solid var(--border);padding:9px 12px;font-size:14px;color:#e8eaf0}
+    tbody td{border-top:1px solid var(--border);padding:9px 12px;font-size:14px;color:#e9eaf0}
     tbody tr:hover{background:rgba(255,255,255,.02)}
     .empty{padding:24px;text-align:center;color:#979aa1}
     .meal-card{border:1px solid var(--border);border-radius:12px;padding:12px 14px;background:#11131a}
@@ -44,6 +48,17 @@
     tr.next td { border-top-color: rgba(66, 103, 178, 0.4); }
     .soon { margin-left:8px; padding:2px 6px; border-radius:999px; font-size:11px; background:#203a6b; color:#d8e6ff; border:1px solid var(--highlightOutline); }
 
+    /* Modal */
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:50}
+    .modal.open{display:flex}
+    .modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.5)}
+    .modal-card{position:relative;z-index:1;width:min(520px,92vw);background:#12131a;border:1px solid var(--border);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.45);padding:18px}
+    .modal-title{margin:0 0 8px 0;font-size:18px;font-weight:700}
+    .modal-desc{margin:0 0 12px 0;color:#cfd2d8;font-size:14px}
+    .modal-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .note{font-size:12px;color:#b6bac3;margin-top:10px}
+    .store-btn{opacity:.5;cursor:not-allowed}
+    .store-row{display:flex;gap:8px;flex-wrap:wrap}
     footer{margin-top:28px;color:#979aa1;font-size:12px}
   </style>
 </head>
@@ -57,6 +72,9 @@
       <div class="toolbar">
         <button id="busBtn" class="btn">🚌 버스</button>
         <button id="mealBtn" class="btn">🍽️ 식단</button>
+        <a id="appLink" class="btn ghost" href="#" aria-disabled="true" title="개발중">
+          🚕 배달·택시 <span class="badge dev">개발중</span>
+        </a>
         <span id="status" class="status">불러오는 중…</span>
       </div>
 
@@ -86,10 +104,39 @@
       </div>
     </section>
 
-    <footer>build: <code>next-highlight</code> · 데이터 파일: <code>bus_schedule.json</code>, <code>menu.json</code></footer>
+    <footer>build: <code>deeplink+next-by-stop</code> · 데이터 파일: <code>bus_schedule.json</code>, <code>menu.json</code></footer>
+  </div>
+
+  <!-- WIP modal -->
+  <div id="wipModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="wipTitle">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card">
+      <h3 id="wipTitle" class="modal-title">배달·택시 앱</h3>
+      <p class="modal-desc">현재 <b>개발 중</b>입니다. 출시되면 이 버튼이 앱으로 바로 연결돼요.</p>
+      <div class="store-row">
+        <a class="btn store-btn" aria-disabled="true"> App Store</a>
+        <a class="btn store-btn" aria-disabled="true">▶ Google Play</a>
+        <a class="btn store-btn" aria-disabled="true">🌐 웹앱</a>
+      </div>
+      <p class="note">※ 출시 후 <code>index.html</code>의 딥링크 상수 값을 채우고 <code>APP_WIP=false</code>로 변경하세요.</p>
+      <div class="modal-actions">
+        <button id="wipClose" class="btn">닫기</button>
+      </div>
+    </div>
   </div>
 
   <script>
+    // === 딥링크 자리 (출시 시 값만 채우면 동작) ===
+    const APP_WIP       = true; // 출시 시 false로
+    // iOS
+    const IOS_SCHEME    = 'mycampus://ride';                               // 커스텀 스킴
+    const IOS_UNIVERSAL = 'https://campusguide011022.netlify.app/ride';    // 유니버설 링크(현재 도메인)
+    const IOS_STORE     = 'https://apps.apple.com/app/id0000000000';       // TODO: 실제 App Store ID
+    // Android
+    const ANDROID_SCHEME = 'mycampus://ride'; // 커스텀 스킴
+    const ANDROID_INTENT = 'intent://ride#Intent;scheme=mycampus;package=kr.campus.mycampus;S.browser_fallback_url=https%3A%2F%2Fcampusguide011022.netlify.app%2Fdownload;end';
+    const ANDROID_STORE  = 'https://play.google.com/store/apps/details?id=kr.campus.mycampus'; // TODO: 실제 패키지
+
     // ===== Global State =====
     const STATE = {
       // Bus
@@ -221,11 +268,13 @@
     }
 
     // ===== Next Bus Calculation =====
-    function findNextIndex(rows){
+    // toSchool 기준: '밀양역' 시간 / toStation 기준: '부산대' 시간
+    function findNextIndex(rows, directionKey){
       const nowMin = nowMinutes();
       let idx = -1, best = Infinity;
       rows.forEach((r, i) => {
-        const m = toMinutes(r.t["시간"] || "");
+        const base = directionKey === "toSchool" ? (r.t["밀양역"] || r.t["시간"]) : (r.t["부산대"] || r.t["시간"]);
+        const m = toMinutes(base);
         if(!Number.isFinite(m)) return;
         if(m >= nowMin && m < best){
           best = m; idx = i;
@@ -259,11 +308,13 @@
         return;
       }
 
-      const nextIdx = findNextIndex(rows);
-
       const cols = directionKey === "toSchool"
         ? ["회차","시간","영남루","밀양역","부산대"]
         : ["회차","시간","부산대","밀양역","영남루"];
+
+      const nextIdx = findNextIndex(rows, directionKey);
+      const highlightColName = directionKey === "toSchool" ? "밀양역" : "부산대";
+      const highlightColIndex = cols.indexOf(highlightColName); // for badge target
 
       const table = document.createElement("table");
       const thead = document.createElement("thead");
@@ -277,20 +328,21 @@
         const arr = directionKey === "toSchool"
           ? [r.run||"", fmtTime(r.t["시간"]||""), fmtTime(r.t["영남루"]||""), fmtTime(r.t["밀양역"]||""), fmtTime(r.t["부산대"]||"")]
           : [r.run||"", fmtTime(r.t["시간"]||""), fmtTime(r.t["부산대"]||""), fmtTime(r.t["밀양역"]||""), fmtTime(r.t["영남루"]||"")];
-        arr.forEach((v, j) => {
+        arr.forEach(v => {
           const td = document.createElement("td");
           td.textContent = v;
           tr.appendChild(td);
         });
         if(i === nextIdx){
           tr.classList.add("next");
-          // add "곧 출발" badge to 시간 cell (2nd column)
-          const timeCell = tr.children[1];
-          const badge = document.createElement("span");
-          badge.className = "soon";
-          badge.textContent = "곧 출발";
-          timeCell.appendChild(badge);
-          // scroll into view gently on first render
+          // add "곧 출발" badge to the base time cell (highlightColIndex)
+          const cell = tr.children[highlightColIndex];
+          if (cell){
+            const badge = document.createElement("span");
+            badge.className = "soon";
+            badge.textContent = "곧 출발";
+            cell.appendChild(badge);
+          }
           setTimeout(() => { tr.scrollIntoView({behavior:"smooth", block:"center"}); }, 50);
         }
         tbody.appendChild(tr);
@@ -298,10 +350,8 @@
       table.appendChild(tbody);
       content.appendChild(table);
 
-      // set/refresh timer to update highlight every minute
       if(STATE.nextTimerId){ clearInterval(STATE.nextTimerId); }
       STATE.nextTimerId = setInterval(() => {
-        // re-render to recompute next
         if(STATE.mode === "bus" && STATE.direction === directionKey && STATE.dayType === dayType){
           renderBusTable(directionKey, dayType);
         }
@@ -366,9 +416,7 @@
     function initUI(){
       // Top buttons
       $("#busBtn").addEventListener("click", async () => {
-        // mode = bus
         setTopActive("bus");
-        // Toggle bus panel on, meals off
         $("#busSubmenu").classList.add("open");
         $("#busTabs").style.display = "flex";
         $("#mealSubmenu").classList.remove("open");
@@ -379,9 +427,7 @@
       });
 
       $("#mealBtn").addEventListener("click", async () => {
-        // mode = meal
         setTopActive("meal");
-        // Toggle meal panel on, bus off
         $("#mealSubmenu").classList.add("open");
         $("#mealControls").style.display = "flex";
         $("#busSubmenu").classList.remove("open");
@@ -392,6 +438,44 @@
           if(input && !input.value) input.value = todayISO();
           STATE.mealDate = input.value || todayISO();
         }
+      });
+
+      // WIP/app link click
+      document.getElementById("appLink").addEventListener("click", (e) => {
+        e.preventDefault();
+        if (APP_WIP) {
+          document.getElementById("wipModal").classList.add("open");
+          return;
+        }
+        const ua = navigator.userAgent || '';
+        if (/iPhone|iPad|iPod/i.test(ua)) {
+          const target = IOS_UNIVERSAL || IOS_SCHEME;
+          const t0 = Date.now();
+          window.location.href = target;
+          setTimeout(() => {
+            if (Date.now() - t0 < 1600 && IOS_STORE) window.location.href = IOS_STORE;
+          }, 1500);
+        } else if (/Android/i.test(ua)) {
+          if (ANDROID_INTENT) {
+            window.location.href = ANDROID_INTENT;
+          } else {
+            const t0 = Date.now();
+            window.location.href = ANDROID_SCHEME;
+            setTimeout(() => {
+              if (Date.now() - t0 < 1600 && ANDROID_STORE) window.location.href = ANDROID_STORE;
+            }, 1500);
+          }
+        } else {
+          window.location.href = IOS_UNIVERSAL || 'https://campusguide011022.netlify.app';
+        }
+      });
+
+      // Modal close
+      document.getElementById("wipClose").addEventListener("click", () => {
+        document.getElementById("wipModal").classList.remove("open");
+      });
+      document.getElementById("wipModal").addEventListener("click", (e) => {
+        if(e.target.classList.contains("modal-backdrop")) document.getElementById("wipModal").classList.remove("open");
       });
 
       // Bus direction

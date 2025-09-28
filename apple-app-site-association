@@ -1,0 +1,15 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "TEAMID12345.kr.campus.mycampus",
+        "paths": [
+          "/ride/*",
+          "/order/*",
+          "/"
+        ]
+      }
+    ]
+  }
+}
