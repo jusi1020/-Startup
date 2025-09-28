@@ -60,6 +60,13 @@
     .store-btn{opacity:.5;cursor:not-allowed}
     .store-row{display:flex;gap:8px;flex-wrap:wrap}
     footer{margin-top:28px;color:#979aa1;font-size:12px}
+  
+    /* mobile fix: keep '곧 출발' on one line */
+    .soon{ white-space:nowrap; display:inline-flex; align-items:center; line-height:1 }
+    @media (max-width:420px){
+      .soon{ font-size:10px; padding:1px 5px; margin-left:6px }
+    }
+
   </style>
 </head>
 <body>
