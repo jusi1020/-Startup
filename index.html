@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>밀양 ↔ 부산대 버스시간표</title>
-  <meta name="build" content="2025-09-28T15:45+09:00-lazyloader-local-first" />
+  <meta name="build" content="2025-09-28T16:05+09:00-verify-xlsx-onload" />
   <style>
     :root {
       --bg: #0b0b0c;
@@ -12,6 +12,7 @@
       --muted: #979aa1;
       --text: #e9e9ee;
       --border: #23232a;
+      --error: #ff5a5a;
     }
     * { box-sizing: border-box; }
     html, body { height: 100%; }
@@ -22,21 +23,10 @@
       background: radial-gradient(1000px 500px at 10% -20%, #182033 0%, #0d101a 40%, var(--bg) 80%);
       min-height: 100%;
     }
-    .wrap {
-      max-width: 980px;
-      margin: 40px auto;
-      padding: 0 16px;
-    }
+    .wrap { max-width: 980px; margin: 40px auto; padding: 0 16px; }
     header h1 { font-size: 28px; margin: 0 0 4px 0; letter-spacing: 0.2px; }
     header p { margin: 0; color: var(--muted); font-size: 14px; }
-    .card {
-      background: linear-gradient(180deg, #171922, #12131a);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      box-shadow: 0 10px 24px rgba(0,0,0,0.35);
-      overflow: hidden;
-      margin-top: 20px;
-    }
+    .card { background: linear-gradient(180deg, #171922, #12131a); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 10px 24px rgba(0,0,0,0.35); overflow: hidden; margin-top: 20px; }
     .toolbar { display: flex; gap: 10px; padding: 14px; border-bottom: 1px solid var(--border); align-items: center; background: rgba(255,255,255,0.02); }
     .btn { appearance: none; border: 1px solid var(--border); background: #191a21; color: var(--text); font-weight: 600; padding: 10px 14px; border-radius: 10px; cursor: pointer; transition: transform .06s ease, border-color .2s ease, background .2s ease; white-space: nowrap; }
     .btn:hover { transform: translateY(-1px); border-color: #2a2a33; }
@@ -56,6 +46,7 @@
     tbody td { border-top: 1px solid var(--border); padding: 9px 12px; font-size: 14px; color: #e8eaf0; }
     tbody tr:hover { background: rgba(255,255,255,0.02); }
     .empty { padding: 24px; text-align: center; color: #979aa1; }
+    .error { padding: 16px; border: 1px solid rgba(255,90,90,.35); background: rgba(255,90,90,.08); color: var(--error); border-radius: 12px; margin: 14px; }
     footer { margin-top: 28px; color: #979aa1; font-size: 12px; }
     .chip { display: inline-flex; align-items: center; gap: 6px; background: #14222b; border: 1px solid #203847; color: #9cc7da; padding: 4px 8px; border-radius: 999px; font-size: 12px; }
   </style>
@@ -89,13 +80,13 @@
       </div>
     </section>
 
-    <footer>※ 데이터는 루트 경로의 <code>bus_schedule.xlsx</code>에서 직접 읽어옵니다. 샘플 데이터는 포함하지 않습니다. <b>build: 2025-09-28 local-first</b></footer>
+    <footer>※ 데이터는 루트 경로의 <code>bus_schedule.xlsx</code>에서 직접 읽어옵니다. 샘플 데이터는 포함하지 않습니다. <b>build: 2025-09-28 verify-xlsx-onload</b></footer>
   </div>
 
   <script>
-    // ===== SheetJS (XLSX) lazy loader with local-first and CDN fallbacks =====
+    // ===== SheetJS (XLSX) lazy loader with verification and timeout =====
     const SHEETJS_URLS = [
-      "./xlsx.full.min.js?v=0.20.0", // local copy (put this file in repo root)
+      "./xlsx.full.min.js?v=0.20.0", // local copy (recommended: add this file to repo root)
       "https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js",
       "https://cdn.jsdelivr.net/npm/xlsx@0.20.0/dist/xlsx.full.min.js",
       "https://unpkg.com/xlsx@0.20.0/dist/xlsx.full.min.js"
@@ -109,19 +100,27 @@
         const tryNext = () => {
           if (window.XLSX) { resolve(window.XLSX); return; }
           if (i >= SHEETJS_URLS.length) {
-            reject(new Error("XLSX 스크립트를 불러오지 못했습니다."));
+            reject(new Error("XLSX 스크립트를 불러오지 못했습니다. (모든 소스 실패)"));
             return;
           }
           const url = SHEETJS_URLS[i++];
           const s = document.createElement("script");
           s.src = url;
           s.async = true;
-          s.onload = () => resolve(window.XLSX);
-          s.onerror = () => {
-            console.warn("[XLSX loader] failed:", url);
-            s.remove();
-            tryNext();
+          let done = false;
+          const finish = (ok) => {
+            if (done) return; done = true;
+            if (ok && window.XLSX) resolve(window.XLSX);
+            else {
+              console.warn("[XLSX loader] not usable:", url);
+              s.remove();
+              tryNext();
+            }
           };
+          s.onload = () => finish(true);
+          s.onerror = () => finish(false);
+          // guard: if loaded but window.XLSX still undefined after a tick
+          setTimeout(() => { if (!window.XLSX) finish(false); }, 150);
           document.head.appendChild(s);
         };
         tryNext();
@@ -132,8 +131,8 @@
     // ===== Global State =====
     const STATE = {
       workbookLoaded: false,
-      data: { toSchool: [], toStation: [] }, // parsed rows
-      direction: null,   // 'toSchool' | 'toStation'
+      data: { toSchool: [], toStation: [] },
+      direction: null,
       dayType: '평일'
     };
 
@@ -166,12 +165,21 @@
       return s;
     }
 
+    function showError(msg) {
+      const content = $("#content");
+      const div = document.createElement("div");
+      div.className = "error";
+      div.textContent = msg;
+      content.innerHTML = "";
+      content.appendChild(div);
+    }
+
     // ===== XLSX Loading and Parsing =====
     async function ensureWorkbookLoaded() {
       if (STATE.workbookLoaded) return;
       showStatus("엑셀 불러오는 중…", true);
       try {
-        await loadXLSX(); // guarantee window.XLSX
+        await loadXLSX(); // guarantee window.XLSX (verified)
         const res = await fetch("./bus_schedule.xlsx", { cache: "no-store" });
         if (!res.ok) throw new Error("엑셀 파일을 불러올 수 없습니다 (" + res.status + ")");
         const ab = await res.arrayBuffer();
@@ -183,7 +191,6 @@
         const L = [];
         const R = [];
         for (const r of rows) {
-          // Left block
           if (r["day_type"] && (r["시간"] || r["영남루"] || r["밀양역"] || r["부산대"])) {
             L.push({
               day_type: r["day_type"],
@@ -196,7 +203,6 @@
               }
             });
           }
-          // Right block
           if (r["day_type.1"] && (r["시간.1"] || r["부산대.1"] || r["밀양역.1"] || r["영남루.1"])) {
             R.push({
               day_type: r["day_type.1"],
@@ -215,7 +221,8 @@
         STATE.workbookLoaded = true;
       } catch (err) {
         console.error(err);
-        alert("엑셀을 불러오는 중 오류가 발생했습니다. (상세: " + (err?.message || err) + ")");
+        showError("엑셀 로드 실패: " + (err?.message || err) + " — 저장소 루트에 xlsx.full.min.js 추가 후 새로고침해 보세요.");
+        throw err;
       } finally {
         showStatus("", false);
       }
