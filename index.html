@@ -4,28 +4,24 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>캠퍼스 가이드 | 교통·식단</title>
-  <meta name="build" content="2025-10-12 merged-bus-rail" />
+  <meta name="build" content="2025-10-12 merged-bus-rail+excel" />
   <style>
     :root {
       --bg:#0b0b0c; --card:#151518; --muted:#979aa1; --text:#e9e9ee; --border:#23232a;
       --accent:#34406a; --accentBg:#21263b; --railBg:#1e4a32; --busBg:#1e3a5f;
     }
     *{box-sizing:border-box} html,body{height:100%}
-    body{
-      margin:0;font-family:ui-sans-serif,-apple-system,Segoe UI,Roboto,Helvetica,Arial,Apple SD Gothic Neo,Malgun Gothic,Noto Sans KR,sans-serif;
-      color:var(--text);background:radial-gradient(1000px 500px at 10% -20%,#182033 0%,#0d101a 40%,var(--bg) 80%);
-    }
+    body{margin:0;font-family:ui-sans-serif,-apple-system,Segoe UI,Roboto,Helvetica,Arial,Apple SD Gothic Neo,Malgun Gothic,Noto Sans KR,sans-serif;color:var(--text);background:radial-gradient(1000px 500px at 10% -20%,#182033 0%,#0d101a 40%,var(--bg) 80%);}
     .wrap{max-width:980px;margin:40px auto;padding:0 16px}
     header h1{font-size:28px;margin:0 0 4px}
     .card{background:linear-gradient(180deg,#171922,#12131a);border:1px solid var(--border);border-radius:16px;box-shadow:0 10px 24px rgba(0,0,0,.35);overflow:hidden;margin-top:20px}
     .toolbar{display:flex;gap:10px;padding:14px;border-bottom:1px solid var(--border);align-items:center;background:rgba(255,255,255,.02);flex-wrap:wrap}
     .btn{appearance:none;border:1px solid var(--border);background:#191a21;color:#e9e9ee;font-weight:600;padding:10px 14px;border-radius:10px;cursor:pointer;transition:transform .06s,border-color .2s,background .2s;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
     .btn:hover{transform:translateY(-1px)} .btn.active{color:#fff;border-color:var(--accent);background:var(--accentBg)}
-    .submenu{display:flex;gap:8px;padding:12px 14px;border-bottom:1px dashed var(--border);align-items:center;flex-wrap:wrap}
+    .submenu,.controls{display:flex;gap:8px;padding:12px 14px;border-bottom:1px dashed var(--border);align-items:center;flex-wrap:wrap}
     .tabs{display:flex;gap:6px;padding:12px 14px;border-bottom:1px dashed var(--border)}
     .tab{border:1px solid var(--border);background:#14151b;color:#979aa1;padding:6px 10px;border-radius:999px;cursor:pointer;font-size:13px}
     .tab.active{color:#fff;border-color:var(--accent);background:var(--accentBg)}
-    .controls{display:flex;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px dashed var(--border);flex-wrap:wrap}
     .content{padding:16px}
     .title-row{display:flex;gap:10px;align-items:baseline;margin-bottom:8px;flex-wrap:wrap}
     .title-row h2{margin:0;font-size:20px;font-weight:700}
@@ -39,19 +35,13 @@
     .type.bus{background:var(--busBg);color:#a3c3ff}
     .type.rail{background:var(--railBg);color:#a3ffcc}
     tr.next{background:rgba(66,103,178,.18)}
-    .toggle{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:#14151b;border-radius:10px;padding:6px 10px;margin-left:auto}
+    .toggle{display:inline-flex;align-items:center;gap:10px;border:1px solid var(--border);background:#14151b;border-radius:10px;padding:6px 10px;margin-left:auto}
     .toggle input{margin:0}
-    .gear{border:1px dashed var(--border);background:#14151b;color:#cfd2d8;border-radius:8px;padding:6px 8px;cursor:pointer}
     .empty{padding:24px;text-align:center;color:#979aa1}
     footer{margin-top:28px;color:#979aa1;font-size:12px}
-    /* modal */
-    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:50}
-    .modal.open{display:flex}
-    .backdrop{position:absolute;inset:0;background:rgba(0,0,0,.5)}
-    .modal-card{position:relative;z-index:1;width:min(520px,92vw);background:#12131a;border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
-    .modal h3{margin:0 0 8px 0}
-    .modal .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}
-    .modal input{background:#14151b;border:1px solid var(--border);border-radius:8px;color:#e9e9ee;padding:6px 8px}
+    select, .chip {background:#14151b;border:1px solid var(--border);color:#e9e9ee;border-radius:8px;padding:6px 8px}
+    .chip {cursor:pointer;user-select:none}
+    .chip.active{border-color:var(--accent);background:var(--accentBg)}
   </style>
 </head>
 <body>
@@ -67,7 +57,10 @@
         <div class="toggle" title="표시 설정">
           <label><input id="chkBus" type="checkbox" checked /> 버스</label>
           <label><input id="chkRail" type="checkbox" /> 철도</label>
-          <button id="btnRailCfg" class="gear">⚙️</button>
+          <select id="railMode">
+            <option value="intercity" selected>일반철도</option>
+            <option value="subway">도시철도</option>
+          </select>
         </div>
       </div>
 
@@ -82,7 +75,21 @@
         <button class="tab" data-day="방학">방학</button>
       </div>
 
-      <!-- 식단: 단순 예시 (있을 때만 사용) -->
+      <!-- 철도 목적지 선택 -->
+      <div id="barRailDest" class="controls" style="display:none">
+        <span style="opacity:.8">철도 목적지</span>
+        <div id="railDestChips" class="chips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+
+        <!-- 도시철도(엑셀 → 셀렉트) -->
+        <div id="subwayCfg" style="display:none;gap:6px;align-items:center">
+          <span style="opacity:.6">도시철도 코드</span>
+          <div id="subwayFields" style="display:flex;gap:6px;align-items:center"></div>
+          <button id="btnSubwaySave" class="btn">저장</button>
+          <small id="railHint" style="color:#9cc7da"></small>
+        </div>
+      </div>
+
+      <!-- 식단: 있을 때만 사용 -->
       <div id="barMeal" class="submenu" style="display:none">
         <button id="btnDorm" class="btn">기숙사</button>
         <button id="btnUnion" class="btn">학생회관</button>
@@ -94,27 +101,11 @@
       <div id="content" class="content"><div class="empty">상단에서 방향과 요일을 선택하세요.</div></div>
     </section>
 
-    <footer>데이터: <code>bus_schedule.json</code>, <code>menu.json</code>, <code>KRIC API</code></footer>
+    <footer>데이터: <code>bus_schedule.json</code>, <code>menu.json</code>, <code>KRIC(도시철도)</code>, <code>국가철도(일반철도)</code></footer>
   </div>
 
-  <!-- 철도 설정 모달 -->
-  <div id="railModal" class="modal" aria-hidden="true">
-    <div class="backdrop"></div>
-    <div class="modal-card">
-      <h3>철도(도시철도) 조회 설정</h3>
-      <div class="row"><small>운영기관/선/역 코드를 입력하세요. (예: 부산 B1 / 1호선 1 / 부산대역 109)</small></div>
-      <div class="row">
-        <label>운영기관 <input id="inpOpr" placeholder="예: B1" /></label>
-        <label>선코드 <input id="inpLine" placeholder="예: 1" /></label>
-        <label>역코드 <input id="inpStation" placeholder="예: 109" /></label>
-      </div>
-      <div class="row">
-        <button id="btnRailSave" class="btn">저장</button>
-        <button id="btnRailClose" class="btn">닫기</button>
-      </div>
-      <div class="row"><small id="railHint" style="color:#9cc7da"></small></div>
-    </div>
-  </div>
+  <!-- 엑셀 파싱용 -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <script>
   // ---------------- App State ----------------
@@ -124,13 +115,17 @@
     dayType: '평일',             // '평일' | '주말·공휴일' | '방학'
     showBus: true,
     showRail: false,
+    railMode: 'intercity',       // 'intercity' | 'subway'
+    railDest: null,              // intercity 목적지(표시용)
     busLoaded: false,
     bus: { toSchool: [], toStation: [] },    // bus_schedule.json
     mealsLoaded: false,
     meals: {},                                // menu.json (옵션)
-    railCfg: { railOprIsttCd:'', lnCd:'', stinCd:'' },
-    railCache: {}                              // key = `${direction}|${dayType}`
+    subwayCfg: { railOprIsttCd:'', lnCd:'', stinCd:'' },
+    railCache: {}                              // key = `${railMode}|${direction}|${dayType}|${railDest||''}`
   };
+
+  const DESTS = ["부산","구포","동대구","대전","서울"]; // intercity 목적지
 
   // ---------------- Utilities ----------------
   const $  = s => document.querySelector(s);
@@ -139,27 +134,23 @@
   function fmtTime(v){
     if(!v) return "";
     let s=String(v).trim();
-    // 오전/오후 hh:mm
     let m = s.match(/^(오전|오후)\s*(\d{1,2}):(\d{1,2})/);
     if(m){ let h=+m[2], mi=pad(m[3]); const pm=m[1]==='오후'; if(pm && h!==12) h+=12; if(!pm && h===12) h=0; return pad(h)+':'+mi; }
-    // hh:mm
     m = s.match(/^(\d{1,2}):(\d{2})/); if(m) return pad(m[1])+':'+m[2];
     return s;
   }
   const toMinutes = hhmm => { const m = fmtTime(hhmm).match(/^(\d{2}):(\d{2})$/); return m ? (+m[1]*60 + +m[2]) : NaN; };
   const nowMinutes = () => new Date().getHours()*60 + new Date().getMinutes();
-
   function showEmpty(text='데이터 없음'){ const d=document.createElement('div'); d.className='empty'; d.textContent=text; return d; }
 
   // ---------------- Loaders ----------------
   async function ensureBusLoaded(){
     if(STATE.busLoaded) return;
-    const r = await fetch('./bus_schedule.json', { cache:'no-store' });  // 네가 올린 JSON 사용
+    const r = await fetch('./bus_schedule.json', { cache:'no-store' });
     if(!r.ok){ $('#content').innerHTML=''; $('#content').appendChild(showEmpty('버스 데이터 로드 실패')); return; }
     STATE.bus = await r.json();
     STATE.busLoaded = true;
   }
-
   async function ensureMealsLoaded(){
     if(STATE.mealsLoaded) return;
     const r = await fetch('./menu.json', { cache:'no-store' });
@@ -168,17 +159,47 @@
     STATE.mealsLoaded = true;
   }
 
-  function dayToKRIC(dayType){
-    if(dayType==='평일') return ['8'];
-    if(dayType==='주말·공휴일') return ['7','9']; // 토/휴일 합침
-    return ['8']; // 방학은 철도 기준 없음 → 평일로 대체
+  function dayToKRIC(dayType){ if(dayType==='평일') return ['8']; if(dayType==='주말·공휴일') return ['7','9']; return ['8']; }
+
+  // ----- 일반철도(국가철도) -----
+  async function loadIntercity(direction, dayType, dest){
+    const key = `intercity|${direction}|${dayType}|${dest||''}`;
+    if(STATE.railCache[key]) return STATE.railCache[key];
+    if(!dest) return [];
+
+    const from = direction==='toStation' ? '밀양' : dest;
+    const to   = direction==='toStation' ? dest  : '밀양';
+    const d = new Date(); const ymd = d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0");
+
+    const url = new URL('/api/korailTimetable', location.origin);
+    url.searchParams.set('from', from);
+    url.searchParams.set('to', to);
+    url.searchParams.set('date', ymd);
+
+    const r = await fetch(url, { cache:'no-store' });
+    if(!r.ok){ return []; }
+    const j = await r.json();
+    const items = j?.response?.body?.items?.item ?? j?.items ?? j?.trains ?? [];
+    const rows = [];
+    for(const it of items){
+      const raw = String(it.depPlandTime || it.dptTm || it.depTime || '').slice(-4); // HHmm
+      if(!raw) continue;
+      const hhmm = raw.replace(/(\d{2})(\d{2})/,'$1:$2');
+      const min  = toMinutes(hhmm);
+      if(isNaN(min)) continue;
+      rows.push({ type:'rail', time:hhmm, timeMin:min, trnNo:it.trainNo || it.trnNo || '', dest:`${from}→${to}` });
+    }
+    rows.sort((a,b)=>a.timeMin-b.timeMin);
+    STATE.railCache[key] = rows;
+    return rows;
   }
 
-  async function loadRailwayOnce(direction, dayType){
-    const key = direction+'|'+dayType;
+  // ----- 도시철도(KRIC) -----
+  async function loadSubway(direction, dayType){
+    const key = `subway|${direction}|${dayType}`;
     if(STATE.railCache[key]) return STATE.railCache[key];
 
-    const { railOprIsttCd, lnCd, stinCd } = STATE.railCfg;
+    const { railOprIsttCd, lnCd, stinCd } = STATE.subwayCfg;
     if(!railOprIsttCd || !lnCd || !stinCd) return [];
 
     let rows = [];
@@ -195,16 +216,10 @@
       const j = await r.json();
       const items = j?.response?.body?.items?.item ?? j?.items ?? [];
       for(const it of items){
-        const hhmm = fmtTime(it.dptTm || it.arvTm || '');
+        const hhmm = (String(it.dptTm||it.arvTm||'').padStart(4,'0')).replace(/(\d{2})(\d{2})/,'$1:$2');
         const min  = toMinutes(hhmm);
         if(isNaN(min)) continue;
-        rows.push({
-          type:'rail',
-          time:hhmm,
-          timeMin:min,
-          trnNo:it.trnNo || '',
-          station:'역코드 '+(it.stinCd || stinCd)
-        });
+        rows.push({ type:'rail', time:hhmm, timeMin:min, trnNo:it.trnNo || '', dest:'도시철도' });
       }
     }
     rows.sort((a,b)=>a.timeMin-b.timeMin);
@@ -212,9 +227,137 @@
     return rows;
   }
 
-  // ---------------- Renderers ----------------
+  // ----- 엑셀 → 셀렉트 자동 구성 (도시철도) -----
+  async function tryEnableSubwaySelectorsFromExcel(){
+    const container = $('#subwayFields');
+    const hint = $('#railHint');
+    container.innerHTML = '';
+
+    try{
+      const rx = await fetch('./운영기관_역사_코드정보_2025.07.04.xls', { cache:'no-store' });
+      if(!rx.ok) throw new Error('엑셀 파일이 없음');
+      const buf = await rx.arrayBuffer();
+      const wb = XLSX.read(new Uint8Array(buf), { type:'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { header:1 });
+
+      if(rows.length < 2) throw new Error('엑셀 데이터가 비어있음');
+
+      // 헤더 인덱스 추론(공식 엑셀의 컬럼명이 조금씩 달라도 매칭되게)
+      const hdr = rows[0].map(h => String(h||'').trim());
+      const idx = {
+        opr:      hdr.findIndex(h => /운영기관|기관.*코드|railOprIsttCd/i.test(h)),
+        oprName:  hdr.findIndex(h => /운영기관.*(명|이름)|기관명/i.test(h)),
+        line:     hdr.findIndex(h => /(노선|호선|선).*코드|lnCd/i.test(h)),
+        lineName: hdr.findIndex(h => /(노선|호선|선).*(명|이름)/i.test(h)),
+        st:       hdr.findIndex(h => /역.*코드|stinCd/i.test(h)),
+        stName:   hdr.findIndex(h => /역.*(명|이름)/i.test(h)),
+      };
+      if(idx.opr<0||idx.line<0||idx.st<0) throw new Error('필수 컬럼(기관/선/역 코드)을 찾지 못함');
+
+      // 계층화: operator -> line -> stations[]
+      const byOpr = {};
+      for(const r of rows.slice(1)){
+        const opr = String(r[idx.opr] ?? '').trim(); if(!opr) continue;
+        const line = String(r[idx.line] ?? '').trim(); if(!line) continue;
+        const st = String(r[idx.st] ?? '').trim(); if(!st) continue;
+
+        const oprName = String(r[idx.oprName] ?? '').trim();
+        const lineName = String(r[idx.lineName] ?? '').trim();
+        const stName = String(r[idx.stName] ?? '').trim();
+
+        byOpr[opr] ??= { id:opr, name: oprName || opr, lines:{} };
+        byOpr[opr].lines[line] ??= { id:line, name: lineName || line, stations:[] };
+        byOpr[opr].lines[line].stations.push({ id:st, name: stName || st });
+      }
+      const operators = Object.values(byOpr).map(op => ({ id:op.id, name:op.name, lines:Object.values(op.lines) }));
+      if(operators.length===0) throw new Error('엑셀에서 유효한 코드가 없음');
+
+      // 셀렉트 생성
+      const selO = document.createElement('select');
+      const selL = document.createElement('select');
+      const selS = document.createElement('select');
+      selO.id='selOpr'; selL.id='selLine'; selS.id='selStation';
+      container.appendChild(selO); container.appendChild(selL); container.appendChild(selS);
+
+      function fillLines(){
+        const op = operators.find(o => o.id === selO.value);
+        selL.innerHTML = (op?.lines||[]).map(li => `<option value="${li.id}">${li.name}(${li.id})</option>`).join('');
+        fillStations();
+      }
+      function fillStations(){
+        const op = operators.find(o => o.id === selO.value);
+        const li = op?.lines?.find(l => l.id === selL.value);
+        selS.innerHTML = (li?.stations||[]).map(s => `<option value="${s.id}">${s.name}(${s.id})</option>`).join('');
+      }
+
+      selO.innerHTML = operators.map(op => `<option value="${op.id}">${op.name}(${op.id})</option>`).join('');
+      // 부산교통공사(B1) 기본 선택 시도 → 없으면 첫 항목
+      selO.value = operators.some(o=>o.id==='B1') ? 'B1' : operators[0].id;
+      fillLines();
+
+      // 변경 연동
+      selO.addEventListener('change', ()=>{ fillLines(); });
+      selL.addEventListener('change', ()=>{ fillStations(); });
+
+      // 저장 버튼이 선택값을 STATE에 반영
+      $('#btnSubwaySave').onclick = ()=>{
+        STATE.subwayCfg.railOprIsttCd = selO.value;
+        STATE.subwayCfg.lnCd = selL.value;
+        STATE.subwayCfg.stinCd = selS.value;
+        STATE.railCache = {};
+        renderTransport();
+      };
+
+      hint.textContent = '공식 엑셀에서 운영기관/노선/역을 불러왔습니다.';
+    }catch(e){
+      // 엑셀을 찾지 못하면 텍스트 입력 fallback
+      const hint = $('#railHint');
+      const fields = $('#subwayFields');
+      fields.innerHTML = `
+        <input id="inpOpr" placeholder="운영기관(B1 등)" class="chip" />
+        <input id="inpLine" placeholder="선(1 등)" class="chip" />
+        <input id="inpStation" placeholder="역코드(109 등)" class="chip" />
+      `;
+      $('#btnSubwaySave').onclick = ()=>{
+        STATE.subwayCfg.railOprIsttCd = $('#inpOpr').value.trim();
+        STATE.subwayCfg.lnCd = $('#inpLine').value.trim();
+        STATE.subwayCfg.stinCd = $('#inpStation').value.trim();
+        STATE.railCache = {};
+        renderTransport();
+      };
+      hint.textContent = '엑셀을 찾지 못했습니다. 입력창으로 진행하세요.';
+      console.warn('Subway Excel load failed:', e);
+    }
+  }
+
+  // ---------------- Renderer (통합) ----------------
   async function renderTransport(){
     await ensureBusLoaded();
+
+    // 철도 바 표시/구성
+    const bar = $('#barRailDest');
+    const chips = $('#railDestChips');
+    bar.style.display = STATE.showRail ? '' : 'none';
+
+    if(STATE.showRail && STATE.railMode==='intercity'){
+      $('#subwayCfg').style.display='none';
+      chips.innerHTML = '';
+      const labels = ["부산","구포","동대구","대전","서울"].map(x => (STATE.direction==='toStation' ? `밀양→${x}` : `${x}→밀양`));
+      labels.forEach(label=>{
+        const div = document.createElement('div');
+        div.className = 'chip' + (STATE.railDest===label?' active':'');
+        div.textContent = label;
+        div.addEventListener('click', ()=>{ STATE.railDest = label; $$('#railDestChips .chip').forEach(c=>c.classList.remove('active')); div.classList.add('active'); renderTransport(); });
+        chips.appendChild(div);
+      });
+      if(!STATE.railDest){ STATE.railDest = labels[0]; }
+    }else if(STATE.showRail && STATE.railMode==='subway'){
+      chips.innerHTML = '';
+      $('#subwayCfg').style.display='';
+      // 엑셀 → 셀렉트 활성화(한 번만)
+      if(!$('#selOpr') && !$('#inpOpr')) await tryEnableSubwaySelectorsFromExcel();
+    }
 
     const content = $('#content'); content.innerHTML = '';
 
@@ -223,25 +366,31 @@
     const h2 = document.createElement('h2');
     h2.textContent = (STATE.direction==='toSchool' ? '밀양 → 부산대' : '부산대 → 밀양');
     const meta = document.createElement('span'); meta.className='meta';
-    meta.textContent = STATE.dayType + (STATE.showRail?' · 철도표시':'');
+    meta.textContent = STATE.dayType + (STATE.showRail ? ` · 철도(${STATE.railMode==='intercity' ? (STATE.railDest||'선택') : '도시철도'})` : '');
     title.appendChild(h2); title.appendChild(meta); content.appendChild(title);
 
-    // 1) 버스 → 통합 행으로 변환
+    // 1) 버스 rows
     const src = (STATE.bus[STATE.direction]||[]).filter(d=>d.day_type===STATE.dayType);
     const busRows = STATE.showBus ? src.map(r=>{
       const t = r.t||{};
-      const time = STATE.direction==='toSchool'
-        ? (t['밀양역'] || t['시간'])
-        : (t['부산대'] || t['시간']);
+      const time = STATE.direction==='toSchool' ? (t['밀양역'] || t['시간']) : (t['부산대'] || t['시간']);
       const timeMin = toMinutes(time);
       if (isNaN(timeMin)) return null;
       return { type:'bus', time:fmtTime(time), timeMin, run:r.run, t };
     }).filter(Boolean) : [];
 
-    // 2) 철도 (토글 켠 경우만)
-    const railRows = STATE.showRail ? await loadRailwayOnce(STATE.direction, STATE.dayType) : [];
+    // 2) 철도 rows
+    let railRows = [];
+    if(STATE.showRail){
+      if(STATE.railMode==='intercity'){
+        const dest = (STATE.railDest||'').replace(/^밀양→|→밀양/g,'');
+        railRows = await loadIntercity(STATE.direction, STATE.dayType, dest);
+      }else{
+        railRows = await loadSubway(STATE.direction, STATE.dayType);
+      }
+    }
 
-    // 3) 합치고 정렬
+    // 3) 합치기
     const rows = [...busRows, ...railRows].sort((a,b)=>a.timeMin-b.timeMin);
 
     // 4) 표
@@ -285,22 +434,21 @@
             <td>${fmtTime(item.t['밀양역']||'')}</td>
             <td>${fmtTime(item.t['영남루']||'')}</td>`;
         }
-      }else{ // rail
+      }else{ // rail (도시/일반 공통 렌더)
         const badge = `<span class="type rail">철도</span>`;
-        // 다른 칼럼은 표 형식 유지용으로 '-' 처리(확장 가능)
         if(STATE.direction==='toSchool'){
           tr.innerHTML = `
             <td>${badge}${item.trnNo||''}</td>
             <td>${item.time}</td>
             <td>-</td>
-            <td>${item.station}</td>
+            <td>${item.dest || '역'}</td>
             <td>-</td>`;
         }else{
           tr.innerHTML = `
             <td>${badge}${item.trnNo||''}</td>
             <td>${item.time}</td>
             <td>-</td>
-            <td>${item.station}</td>
+            <td>${item.dest || '역'}</td>
             <td>-</td>`;
         }
       }
@@ -310,6 +458,7 @@
     content.appendChild(table);
   }
 
+  // ---------------- Meals ----------------
   async function renderMeals(hall){
     await ensureMealsLoaded();
     const content = $('#content'); content.innerHTML='';
@@ -328,8 +477,6 @@
 
   // ---------------- Wire UI ----------------
   function setActive(el, groupSel){ $$(groupSel).forEach(b=>b.classList.remove('active')); el.classList.add('active'); }
-  function openRailModal(){ $('#inpOpr').value=STATE.railCfg.railOprIsttCd||''; $('#inpLine').value=STATE.railCfg.lnCd||''; $('#inpStation').value=STATE.railCfg.stinCd||''; $('#railModal').classList.add('open'); }
-  function closeRailModal(){ $('#railModal').classList.remove('open'); }
 
   function init(){
     // 상단 모드
@@ -345,13 +492,13 @@
       $('#btnMeal').classList.add('active'); $('#btnTransport').classList.remove('active');
       $('#barTransport').style.display='none'; $('#tabsDay').style.display='none';
       $('#barMeal').style.display='';
-      $('#mealDate').value = new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
+      $('#content').innerHTML='';
       renderMeals('기숙사');
     });
 
     // 방향
-    $('#btnToSchool').addEventListener('click', (e)=>{ STATE.direction='toSchool'; setActive(e.currentTarget,'.submenu .btn'); renderTransport(); });
-    $('#btnToStation').addEventListener('click', (e)=>{ STATE.direction='toStation'; setActive(e.currentTarget,'.submenu .btn'); renderTransport(); });
+    $('#btnToSchool').addEventListener('click', (e)=>{ STATE.direction='toSchool'; setActive(e.currentTarget,'.submenu .btn'); STATE.railDest=null; renderTransport(); });
+    $('#btnToStation').addEventListener('click', (e)=>{ STATE.direction='toStation'; setActive(e.currentTarget,'.submenu .btn'); STATE.railDest=null; renderTransport(); });
 
     // 요일
     $$('#tabsDay .tab').forEach(b=>{
@@ -360,27 +507,10 @@
       });
     });
 
-    // 토글
+    // 토글/모드
     $('#chkBus').addEventListener('change', (e)=>{ STATE.showBus=e.target.checked; renderTransport(); });
-    $('#chkRail').addEventListener('change', (e)=>{
-      STATE.showRail=e.target.checked;
-      if(STATE.showRail && (!STATE.railCfg.railOprIsttCd || !STATE.railCfg.lnCd || !STATE.railCfg.stinCd)){
-        openRailModal(); return;
-      }
-      renderTransport();
-    });
-    $('#btnRailCfg').addEventListener('click', openRailModal);
-
-    // 모달
-    $('.backdrop').addEventListener('click', closeRailModal);
-    $('#btnRailClose').addEventListener('click', closeRailModal);
-    $('#btnRailSave').addEventListener('click', ()=>{
-      STATE.railCfg.railOprIsttCd = $('#inpOpr').value.trim();
-      STATE.railCfg.lnCd = $('#inpLine').value.trim();
-      STATE.railCfg.stinCd = $('#inpStation').value.trim();
-      STATE.railCache = {}; // 캐시 초기화(설정 변경 반영)
-      closeRailModal(); renderTransport();
-    });
+    $('#chkRail').addEventListener('change', (e)=>{ STATE.showRail=e.target.checked; renderTransport(); });
+    $('#railMode').addEventListener('change', async (e)=>{ STATE.railMode=e.target.value; STATE.railDest=null; renderTransport(); });
 
     // 초기 렌더
     renderTransport();
