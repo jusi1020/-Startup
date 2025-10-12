@@ -4,23 +4,25 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>캠퍼스 가이드 | 교통·식단</title>
-  <meta name="build" content="2025-10-12T00:00+09:00-merged-timetable" />
+  <meta name="build" content="2025-10-12 merged-bus-rail" />
   <style>
-    :root { --bg:#0b0b0c; --card:#151518; --muted:#979aa1; --text:#e9e9ee; --border:#23232a; --accent:#34406a; --accentBg:#21263b; --highlight:#22427a; --highlightOutline:#4267b2; --railBg:#1e4a32; --busBg:#1e3a5f; }
+    :root {
+      --bg:#0b0b0c; --card:#151518; --muted:#979aa1; --text:#e9e9ee; --border:#23232a;
+      --accent:#34406a; --accentBg:#21263b; --railBg:#1e4a32; --busBg:#1e3a5f;
+    }
     *{box-sizing:border-box} html,body{height:100%}
-    body{margin:0;font-family:ui-sans-serif,-apple-system,Segoe UI,Roboto,Helvetica,Arial,Apple SD Gothic Neo,Malgun Gothic,Noto Sans KR,sans-serif;color:var(--text);background:radial-gradient(1000px 500px at 10% -20%,#182033 0%,#0d101a 40%,var(--bg) 80%);}
+    body{
+      margin:0;font-family:ui-sans-serif,-apple-system,Segoe UI,Roboto,Helvetica,Arial,Apple SD Gothic Neo,Malgun Gothic,Noto Sans KR,sans-serif;
+      color:var(--text);background:radial-gradient(1000px 500px at 10% -20%,#182033 0%,#0d101a 40%,var(--bg) 80%);
+    }
     .wrap{max-width:980px;margin:40px auto;padding:0 16px}
     header h1{font-size:28px;margin:0 0 4px}
     .card{background:linear-gradient(180deg,#171922,#12131a);border:1px solid var(--border);border-radius:16px;box-shadow:0 10px 24px rgba(0,0,0,.35);overflow:hidden;margin-top:20px}
     .toolbar{display:flex;gap:10px;padding:14px;border-bottom:1px solid var(--border);align-items:center;background:rgba(255,255,255,.02);flex-wrap:wrap}
     .btn{appearance:none;border:1px solid var(--border);background:#191a21;color:#e9e9ee;font-weight:600;padding:10px 14px;border-radius:10px;cursor:pointer;transition:transform .06s,border-color .2s,background .2s;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
-    .btn:hover{transform:translateY(-1px)} .btn:active{transform:translateY(0)}
-    .btn.active{color:#fff;border-color:var(--accent);background:var(--accentBg)}
-    .btn.ghost{background:transparent}
-    .status{display:none;border:1px solid #203847;background:#14222b;color:#9cc7da;padding:4px 8px;border-radius:999px;font-size:12px}
-    .submenu{display:none;gap:8px;padding:12px 14px;border-bottom:1px dashed var(--border);align-items:center;flex-wrap:wrap}
-    .submenu.open{display:flex}
-    .tabs{display:none;gap:6px;padding:12px 14px;border-bottom:1px dashed var(--border)}
+    .btn:hover{transform:translateY(-1px)} .btn.active{color:#fff;border-color:var(--accent);background:var(--accentBg)}
+    .submenu{display:flex;gap:8px;padding:12px 14px;border-bottom:1px dashed var(--border);align-items:center;flex-wrap:wrap}
+    .tabs{display:flex;gap:6px;padding:12px 14px;border-bottom:1px dashed var(--border)}
     .tab{border:1px solid var(--border);background:#14151b;color:#979aa1;padding:6px 10px;border-radius:999px;cursor:pointer;font-size:13px}
     .tab.active{color:#fff;border-color:var(--accent);background:var(--accentBg)}
     .controls{display:flex;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px dashed var(--border);flex-wrap:wrap}
@@ -37,7 +39,7 @@
     .type.bus{background:var(--busBg);color:#a3c3ff}
     .type.rail{background:var(--railBg);color:#a3ffcc}
     tr.next{background:rgba(66,103,178,.18)}
-    .toggle{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:#14151b;border-radius:10px;padding:6px 10px}
+    .toggle{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:#14151b;border-radius:10px;padding:6px 10px;margin-left:auto}
     .toggle input{margin:0}
     .gear{border:1px dashed var(--border);background:#14151b;color:#cfd2d8;border-radius:8px;padding:6px 8px;cursor:pointer}
     .empty{padding:24px;text-align:center;color:#979aa1}
@@ -49,7 +51,7 @@
     .modal-card{position:relative;z-index:1;width:min(520px,92vw);background:#12131a;border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
     .modal h3{margin:0 0 8px 0}
     .modal .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}
-    .modal input,.modal select{background:#14151b;border:1px solid var(--border);border-radius:8px;color:#e9e9ee;padding:6px 8px}
+    .modal input{background:#14151b;border:1px solid var(--border);border-radius:8px;color:#e9e9ee;padding:6px 8px}
   </style>
 </head>
 <body>
@@ -57,33 +59,31 @@
     <header><h1>캠퍼스 가이드 | 교통·식단</h1></header>
 
     <section class="card">
+      <!-- 상단: 교통/식단 -->
       <div class="toolbar">
         <button id="btnTransport" class="btn active">🚌 교통</button>
         <button id="btnMeal" class="btn">🍽️ 식단</button>
-        <span id="status" class="status">불러오는 중…</span>
-      </div>
 
-      <!-- 교통 서브메뉴 -->
-      <div id="barTransport" class="submenu open">
-        <button id="btnToSchool" class="btn active">학교로 <span style="opacity:.7">(밀양→부산대)</span></button>
-        <button id="btnToStation" class="btn">역으로 <span style="opacity:.7">(부산대→밀양)</span></button>
-
-        <div class="toggle">
-          <label><input id="chkBus" type="checkbox" checked /> 🚌 버스</label>
-          <label><input id="chkRail" type="checkbox" /> 🚊 철도</label>
-          <button id="btnRailCfg" class="gear" title="철도 설정">⚙️</button>
+        <div class="toggle" title="표시 설정">
+          <label><input id="chkBus" type="checkbox" checked /> 버스</label>
+          <label><input id="chkRail" type="checkbox" /> 철도</label>
+          <button id="btnRailCfg" class="gear">⚙️</button>
         </div>
       </div>
 
-      <!-- 요일 탭(교통) -->
-      <div id="tabsDay" class="tabs" style="display:flex;">
+      <!-- 교통: 방향 & 요일 -->
+      <div id="barTransport" class="submenu">
+        <button id="btnToSchool" class="btn active">학교로 <span style="opacity:.7">(밀양→부산대)</span></button>
+        <button id="btnToStation" class="btn">역으로 <span style="opacity:.7">(부산대→밀양)</span></button>
+      </div>
+      <div id="tabsDay" class="tabs">
         <button class="tab active" data-day="평일">평일</button>
         <button class="tab" data-day="주말·공휴일">주말·공휴일</button>
         <button class="tab" data-day="방학">방학</button>
       </div>
 
-      <!-- 식단 서브메뉴 -->
-      <div id="barMeal" class="submenu">
+      <!-- 식단: 단순 예시 (있을 때만 사용) -->
+      <div id="barMeal" class="submenu" style="display:none">
         <button id="btnDorm" class="btn">기숙사</button>
         <button id="btnUnion" class="btn">학생회관</button>
         <div class="controls">
@@ -91,9 +91,7 @@
         </div>
       </div>
 
-      <div id="content" class="content">
-        <div class="empty">상단에서 방향과 요일을 선택하세요.</div>
-      </div>
+      <div id="content" class="content"><div class="empty">상단에서 방향과 요일을 선택하세요.</div></div>
     </section>
 
     <footer>데이터: <code>bus_schedule.json</code>, <code>menu.json</code>, <code>KRIC API</code></footer>
@@ -104,110 +102,95 @@
     <div class="backdrop"></div>
     <div class="modal-card">
       <h3>철도(도시철도) 조회 설정</h3>
+      <div class="row"><small>운영기관/선/역 코드를 입력하세요. (예: 부산 B1 / 1호선 1 / 부산대역 109)</small></div>
       <div class="row">
-        <small>※ <code>rail_codes.json</code> 또는 운영기관/역 코드 엑셀을 루트에 두면 자동 드롭다운됩니다.</small>
-      </div>
-      <div class="row">
-        <label>운영기관
-          <input id="inpOpr" placeholder="예: B1(부산)" />
-        </label>
-        <label>선코드
-          <input id="inpLine" placeholder="예: 1" />
-        </label>
-        <label>역코드
-          <input id="inpStation" placeholder="예: 109" />
-        </label>
+        <label>운영기관 <input id="inpOpr" placeholder="예: B1" /></label>
+        <label>선코드 <input id="inpLine" placeholder="예: 1" /></label>
+        <label>역코드 <input id="inpStation" placeholder="예: 109" /></label>
       </div>
       <div class="row">
         <button id="btnRailSave" class="btn">저장</button>
-        <button id="btnRailClose" class="btn ghost">닫기</button>
+        <button id="btnRailClose" class="btn">닫기</button>
       </div>
       <div class="row"><small id="railHint" style="color:#9cc7da"></small></div>
     </div>
   </div>
 
-  <!-- (선택) XLSX 파싱용 -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script>
-  // ===== App State =====
+  // ---------------- App State ----------------
   const STATE = {
     mode: 'transport',
     direction: 'toSchool',       // 'toSchool' | 'toStation'
-    dayType: '평일',             // 평일 | 주말·공휴일 | 방학
+    dayType: '평일',             // '평일' | '주말·공휴일' | '방학'
     showBus: true,
     showRail: false,
     busLoaded: false,
-    bus: { toSchool: [], toStation: [] }, // from bus_schedule.json  :contentReference[oaicite:4]{index=4}
+    bus: { toSchool: [], toStation: [] },    // bus_schedule.json
     mealsLoaded: false,
-    meals: {},                   // from menu.json (optional)        :contentReference[oaicite:5]{index=5}
-    railCfg: { railOprIsttCd:'', lnCd:'', stinCd:'' }, // user config
-    railCache: { }               // key(dayType+direction) -> rows
+    meals: {},                                // menu.json (옵션)
+    railCfg: { railOprIsttCd:'', lnCd:'', stinCd:'' },
+    railCache: {}                              // key = `${direction}|${dayType}`
   };
 
-  // ===== Utilities =====
+  // ---------------- Utilities ----------------
   const $  = s => document.querySelector(s);
   const $$ = s => Array.from(document.querySelectorAll(s));
-  function showStatus(msg){ const s=$("#status"); if(!s) return; if(msg){s.textContent=msg; s.style.display='inline-flex'} else {s.style.display='none'} }
   const pad = n=>String(n).padStart(2,'0');
   function fmtTime(v){
     if(!v) return "";
     let s=String(v).trim();
-    let m = s.match(/^(오전|오후)\s*(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/);
+    // 오전/오후 hh:mm
+    let m = s.match(/^(오전|오후)\s*(\d{1,2}):(\d{1,2})/);
     if(m){ let h=+m[2], mi=pad(m[3]); const pm=m[1]==='오후'; if(pm && h!==12) h+=12; if(!pm && h===12) h=0; return pad(h)+':'+mi; }
-    m = s.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/); if(m) return pad(m[1])+':'+m[2];
+    // hh:mm
+    m = s.match(/^(\d{1,2}):(\d{2})/); if(m) return pad(m[1])+':'+m[2];
     return s;
   }
-  const toMinutes = hhmm => { const s = fmtTime(hhmm); const m=s.match(/^(\d{2}):(\d{2})$/); return m ? (+m[1]*60 + +m[2]) : NaN; };
+  const toMinutes = hhmm => { const m = fmtTime(hhmm).match(/^(\d{2}):(\d{2})$/); return m ? (+m[1]*60 + +m[2]) : NaN; };
   const nowMinutes = () => new Date().getHours()*60 + new Date().getMinutes();
 
-  // ===== Data Loaders =====
+  function showEmpty(text='데이터 없음'){ const d=document.createElement('div'); d.className='empty'; d.textContent=text; return d; }
+
+  // ---------------- Loaders ----------------
   async function ensureBusLoaded(){
     if(STATE.busLoaded) return;
-    showStatus('버스 데이터 불러오는 중…');
-    const r = await fetch('./bus_schedule.json',{cache:'no-store'}); // :contentReference[oaicite:6]{index=6}
-    if(!r.ok) { showStatus(''); alert('bus_schedule.json 불러오기 실패'); return; }
+    const r = await fetch('./bus_schedule.json', { cache:'no-store' });  // 네가 올린 JSON 사용
+    if(!r.ok){ $('#content').innerHTML=''; $('#content').appendChild(showEmpty('버스 데이터 로드 실패')); return; }
     STATE.bus = await r.json();
     STATE.busLoaded = true;
-    showStatus('');
   }
 
   async function ensureMealsLoaded(){
     if(STATE.mealsLoaded) return;
-    showStatus('식단 데이터 불러오는 중…');
-    const r = await fetch('./menu.json',{cache:'no-store'});        // :contentReference[oaicite:7]{index=7}
-    if(!r.ok){ showStatus(''); return; }
+    const r = await fetch('./menu.json', { cache:'no-store' });
+    if(!r.ok) return;
     STATE.meals = await r.json();
     STATE.mealsLoaded = true;
-    showStatus('');
   }
 
   function dayToKRIC(dayType){
-    // KRIC: 7=토, 8=평일, 9=휴일. 우리 '주말·공휴일'은 7,9 둘 다 합치기.
     if(dayType==='평일') return ['8'];
-    if(dayType==='주말·공휴일') return ['7','9'];
-    // '방학'은 버스만 존재 → 철도는 평일로 근사
-    return ['8'];
+    if(dayType==='주말·공휴일') return ['7','9']; // 토/휴일 합침
+    return ['8']; // 방학은 철도 기준 없음 → 평일로 대체
   }
 
   async function loadRailwayOnce(direction, dayType){
     const key = direction+'|'+dayType;
     if(STATE.railCache[key]) return STATE.railCache[key];
 
-    const days = dayToKRIC(dayType);
-    const cfg = STATE.railCfg;
-    if(!cfg.railOprIsttCd || !cfg.lnCd || !cfg.stinCd) return [];
+    const { railOprIsttCd, lnCd, stinCd } = STATE.railCfg;
+    if(!railOprIsttCd || !lnCd || !stinCd) return [];
 
-    showStatus('철도 시간표 불러오는 중…');
     let rows = [];
-    for(const d of days){
+    for(const d of dayToKRIC(dayType)){
       const u = new URL('/api/subwayTimetable', location.origin);
-      u.searchParams.set('railOprIsttCd', cfg.railOprIsttCd);
-      u.searchParams.set('lnCd', cfg.lnCd);
-      u.searchParams.set('stinCd', cfg.stinCd);
+      u.searchParams.set('railOprIsttCd', railOprIsttCd);
+      u.searchParams.set('lnCd', lnCd);
+      u.searchParams.set('stinCd', stinCd);
       u.searchParams.set('dayCd', d);
       u.searchParams.set('format','json');
 
-      const r = await fetch(u, {cache:'no-store'});
+      const r = await fetch(u, { cache:'no-store' });
       if(!r.ok) continue;
       const j = await r.json();
       const items = j?.response?.body?.items?.item ?? j?.items ?? [];
@@ -216,71 +199,65 @@
         const min  = toMinutes(hhmm);
         if(isNaN(min)) continue;
         rows.push({
-          type: 'rail',
-          time: hhmm,
-          timeMin: min,
-          trnNo: it.trnNo || '',
-          dayNm: it.dayNm || '',
-          // 간단한 표시에 필요한 최소 필드
-          station: '역코드 '+(it.stinCd || cfg.stinCd),
-          dest: '-',  // (필요시 확장)
+          type:'rail',
+          time:hhmm,
+          timeMin:min,
+          trnNo:it.trnNo || '',
+          station:'역코드 '+(it.stinCd || stinCd)
         });
       }
     }
     rows.sort((a,b)=>a.timeMin-b.timeMin);
     STATE.railCache[key] = rows;
-    showStatus('');
     return rows;
   }
 
-  // ===== Renderer: Combined Transport =====
+  // ---------------- Renderers ----------------
   async function renderTransport(){
     await ensureBusLoaded();
 
-    const content = $('#content'); content.innerHTML='';
+    const content = $('#content'); content.innerHTML = '';
+
+    // Title
     const title = document.createElement('div'); title.className='title-row';
     const h2 = document.createElement('h2');
-    const icons = [STATE.showBus?'🚌':null, STATE.showRail?'🚊':null].filter(Boolean).join(' ');
-    h2.innerHTML = `${icons} ${STATE.direction==='toSchool'?'밀양 → 부산대':'부산대 → 밀양'}`;
-    const meta = document.createElement('span'); meta.className='meta'; meta.textContent = STATE.dayType;
+    h2.textContent = (STATE.direction==='toSchool' ? '밀양 → 부산대' : '부산대 → 밀양');
+    const meta = document.createElement('span'); meta.className='meta';
+    meta.textContent = STATE.dayType + (STATE.showRail?' · 철도표시':'');
     title.appendChild(h2); title.appendChild(meta); content.appendChild(title);
 
-    // 1) 버스 rows
-    const busRowsRaw = (STATE.bus[STATE.direction]||[]).filter(d=>d.day_type===STATE.dayType); // :contentReference[oaicite:8]{index=8}
-    const busRows = STATE.showBus ? busRowsRaw.map(r=>{
-      const timeField = STATE.direction==='toSchool' ? (r.t['밀양역'] || r.t['시간']) : (r.t['부산대'] || r.t['시간']);
-      const timeMin = toMinutes(timeField);
-      return isNaN(timeMin) ? null : {
-        type:'bus',
-        time: fmtTime(timeField),
-        timeMin,
-        run: r.run,
-        t: r.t
-      };
+    // 1) 버스 → 통합 행으로 변환
+    const src = (STATE.bus[STATE.direction]||[]).filter(d=>d.day_type===STATE.dayType);
+    const busRows = STATE.showBus ? src.map(r=>{
+      const t = r.t||{};
+      const time = STATE.direction==='toSchool'
+        ? (t['밀양역'] || t['시간'])
+        : (t['부산대'] || t['시간']);
+      const timeMin = toMinutes(time);
+      if (isNaN(timeMin)) return null;
+      return { type:'bus', time:fmtTime(time), timeMin, run:r.run, t };
     }).filter(Boolean) : [];
 
-    // 2) 철도 rows
+    // 2) 철도 (토글 켠 경우만)
     const railRows = STATE.showRail ? await loadRailwayOnce(STATE.direction, STATE.dayType) : [];
 
     // 3) 합치고 정렬
     const rows = [...busRows, ...railRows].sort((a,b)=>a.timeMin-b.timeMin);
-    if(rows.length===0){
-      const empty = document.createElement('div'); empty.className='empty'; empty.textContent='해당 조건의 시간표가 없습니다.';
-      content.appendChild(empty); return;
-    }
 
-    // 4) 표 그리기
+    // 4) 표
     const table = document.createElement('table');
     const thead = document.createElement('thead'); const trh=document.createElement('tr');
-    const cols = STATE.direction==='toSchool' ? ['구분','출발','영남루','밀양역','부산대'] : ['구분','출발','부산대','밀양역','영남루'];
-    cols.forEach(c=>{const th=document.createElement('th'); th.textContent=c; trh.appendChild(th);});
+    const cols = STATE.direction==='toSchool'
+      ? ['구분','시간','영남루','밀양역','부산대']
+      : ['구분','시간','부산대','밀양역','영남루'];
+    cols.forEach(c=>{ const th=document.createElement('th'); th.textContent=c; trh.appendChild(th); });
     thead.appendChild(trh); table.appendChild(thead);
     const tbody = document.createElement('tbody');
 
-    const nowMin = nowMinutes(); let nextMarked=false; let lastHour=-1;
+    if(rows.length===0){ content.appendChild(showEmpty('해당 조건의 시간표가 없습니다.')); return; }
 
+    const nowMin = nowMinutes(); let nextMarked=false; let lastHour=-1;
     for(const item of rows){
-      // 시각 구분선
       const hour = Math.floor(item.timeMin/60);
       if(hour!==lastHour){
         const sep=document.createElement('tr'); sep.className='hour-sep';
@@ -288,7 +265,7 @@
         sep.appendChild(td); tbody.appendChild(sep); lastHour=hour;
       }
 
-      const tr = document.createElement('tr');
+      const tr=document.createElement('tr');
       if(!nextMarked && item.timeMin>=nowMin){ tr.classList.add('next'); nextMarked=true; }
 
       if(item.type==='bus'){
@@ -310,18 +287,19 @@
         }
       }else{ // rail
         const badge = `<span class="type rail">철도</span>`;
+        // 다른 칼럼은 표 형식 유지용으로 '-' 처리(확장 가능)
         if(STATE.direction==='toSchool'){
           tr.innerHTML = `
             <td>${badge}${item.trnNo||''}</td>
             <td>${item.time}</td>
             <td>-</td>
             <td>${item.station}</td>
-            <td>${item.dest}</td>`;
+            <td>-</td>`;
         }else{
           tr.innerHTML = `
             <td>${badge}${item.trnNo||''}</td>
             <td>${item.time}</td>
-            <td>${item.dest}</td>
+            <td>-</td>
             <td>${item.station}</td>
             <td>-</td>`;
         }
@@ -332,117 +310,81 @@
     content.appendChild(table);
   }
 
-  // ===== Meals (optional) =====
   async function renderMeals(hall){
     await ensureMealsLoaded();
     const content = $('#content'); content.innerHTML='';
-    const date = $('#mealDate').value || new Date().toISOString().slice(0,10);
-    const data = STATE.meals[hall]?.[date];
+    const date = $('#mealDate').value || new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
+    const d = STATE.meals[hall]?.[date];
     const title = document.createElement('div'); title.className='title-row';
     title.innerHTML = `<h2>🍽️ ${hall}</h2><span class="meta">${date}</span>`;
     content.appendChild(title);
-    if(!data){ content.appendChild(Object.assign(document.createElement('div'),{className:'empty',textContent:'데이터 없음'})); return; }
-    const sections = ['아침','점심','저녁'];
-    sections.forEach(sec=>{
-      const card = document.createElement('div'); card.className='content';
-      const h = document.createElement('h3'); h.textContent=sec; content.appendChild(h);
-      const ul=document.createElement('ul'); (data[sec]||[]).forEach(x=>{const li=document.createElement('li'); li.textContent=x; ul.appendChild(li);}); content.appendChild(ul);
-    });
+    if(!d){ content.appendChild(showEmpty()); return; }
+    for(const sec of ['아침','점심','저녁']){
+      const h3=document.createElement('h3'); h3.textContent=sec; content.appendChild(h3);
+      const ul=document.createElement('ul'); (d[sec]||[]).forEach(x=>{const li=document.createElement('li'); li.textContent=x; ul.appendChild(li);});
+      content.appendChild(ul);
+    }
   }
 
-  // ===== Rail Settings (modal + auto-source) =====
-  async function tryLoadRailCodes(){
-    const hint = $('#railHint');
-    // 1) rail_codes.json
-    try{
-      const r = await fetch('./rail_codes.json',{cache:'no-store'});
-      if(r.ok){
-        hint.textContent = 'rail_codes.json에서 코드 정보를 불러왔습니다.';
-        return; // (간단 모달이라 셀렉트는 생략, 필요시 확장)
-      }
-    }catch{}
-    // 2) 엑셀 자동 파싱(파일명은 예시)
-    try{
-      const rx = await fetch('./운영기관_역사_코드정보_2025.07.04.xls');
-      if(rx.ok){
-        const buf = await rx.arrayBuffer();
-        const wb = XLSX.read(new Uint8Array(buf),{type:'array'});
-        if(wb.SheetNames?.length){ hint.textContent = '엑셀에서 코드 정보를 자동 인식했습니다.'; return; }
-      }
-    }catch{}
-    hint.textContent = '코드는 수동 입력하세요.';
-  }
-
-  // ===== Wire UI =====
-  function setActive(el, groupSel){
-    $$(groupSel).forEach(b=>b.classList.remove('active')); el.classList.add('active');
-  }
+  // ---------------- Wire UI ----------------
+  function setActive(el, groupSel){ $$(groupSel).forEach(b=>b.classList.remove('active')); el.classList.add('active'); }
+  function openRailModal(){ $('#inpOpr').value=STATE.railCfg.railOprIsttCd||''; $('#inpLine').value=STATE.railCfg.lnCd||''; $('#inpStation').value=STATE.railCfg.stinCd||''; $('#railModal').classList.add('open'); }
+  function closeRailModal(){ $('#railModal').classList.remove('open'); }
 
   function init(){
-    // Top buttons
+    // 상단 모드
     $('#btnTransport').addEventListener('click', ()=>{
       STATE.mode='transport';
       $('#btnTransport').classList.add('active'); $('#btnMeal').classList.remove('active');
-      $('#barTransport').classList.add('open'); $('#tabsDay').style.display='flex';
-      $('#barMeal').classList.remove('open');
+      $('#barTransport').style.display=''; $('#tabsDay').style.display='';
+      $('#barMeal').style.display='none';
       renderTransport();
     });
     $('#btnMeal').addEventListener('click', ()=>{
       STATE.mode='meal';
       $('#btnMeal').classList.add('active'); $('#btnTransport').classList.remove('active');
-      $('#barTransport').classList.remove('open'); $('#tabsDay').style.display='none';
-      $('#barMeal').classList.add('open');
+      $('#barTransport').style.display='none'; $('#tabsDay').style.display='none';
+      $('#barMeal').style.display='';
       $('#mealDate').value = new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
       renderMeals('기숙사');
     });
 
-    // Direction
+    // 방향
     $('#btnToSchool').addEventListener('click', (e)=>{ STATE.direction='toSchool'; setActive(e.currentTarget,'.submenu .btn'); renderTransport(); });
     $('#btnToStation').addEventListener('click', (e)=>{ STATE.direction='toStation'; setActive(e.currentTarget,'.submenu .btn'); renderTransport(); });
 
-    // Day tabs
+    // 요일
     $$('#tabsDay .tab').forEach(b=>{
       b.addEventListener('click', (e)=>{
         setActive(e.currentTarget,'#tabsDay .tab'); STATE.dayType = e.currentTarget.dataset.day; renderTransport();
       });
     });
 
-    // Toggles
-    $('#chkBus').addEventListener('change', (e)=>{ STATE.showBus = e.target.checked; renderTransport(); });
-    $('#chkRail').addEventListener('change', async (e)=>{
-      STATE.showRail = e.target.checked;
+    // 토글
+    $('#chkBus').addEventListener('change', (e)=>{ STATE.showBus=e.target.checked; renderTransport(); });
+    $('#chkRail').addEventListener('change', (e)=>{
+      STATE.showRail=e.target.checked;
       if(STATE.showRail && (!STATE.railCfg.railOprIsttCd || !STATE.railCfg.lnCd || !STATE.railCfg.stinCd)){
         openRailModal(); return;
       }
       renderTransport();
     });
-
-    // Rail modal
     $('#btnRailCfg').addEventListener('click', openRailModal);
+
+    // 모달
     $('.backdrop').addEventListener('click', closeRailModal);
     $('#btnRailClose').addEventListener('click', closeRailModal);
     $('#btnRailSave').addEventListener('click', ()=>{
       STATE.railCfg.railOprIsttCd = $('#inpOpr').value.trim();
       STATE.railCfg.lnCd = $('#inpLine').value.trim();
       STATE.railCfg.stinCd = $('#inpStation').value.trim();
-      STATE.railCache = {}; // reset cache
+      STATE.railCache = {}; // 캐시 초기화(설정 변경 반영)
       closeRailModal(); renderTransport();
     });
 
-    // defaults
+    // 초기 렌더
     renderTransport();
   }
-
-  function openRailModal(){
-    $('#inpOpr').value = STATE.railCfg.railOprIsttCd || '';
-    $('#inpLine').value = STATE.railCfg.lnCd || '';
-    $('#inpStation').value = STATE.railCfg.stinCd || '';
-    $('#railModal').classList.add('open');
-    tryLoadRailCodes();
-  }
-  function closeRailModal(){ $('#railModal').classList.remove('open'); }
-
-  // start
   window.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
