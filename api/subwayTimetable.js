@@ -1,7 +1,7 @@
 // api/subwayTimetable.js
 export const config = {
     runtime: "nodejs",
-    regions: ["icn1", "hnd1"]
+    regions: ["icn1"]
   };
   
   export default async function handler(req, res) {
